@@ -13,7 +13,7 @@ or
 
 ## Usage
 
-```
+```js
 const gatewayProtocol = require('@tryghost/members-gateway-protocol');
 const gatewayFrame = document.querySelector('iframe');
 
