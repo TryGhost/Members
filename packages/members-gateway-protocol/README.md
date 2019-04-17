@@ -17,7 +17,7 @@ or
 const gatewayProtocol = require('@tryghost/members-gateway-protocol');
 const gatewayFrame = document.querySelector('iframe');
 
-const { call, listen } = GatewayProtocol(gatewayFrame);
+const { call, listen } = gatewayProtocol(gatewayFrame);
 
 // Add listener for gateway events - limited to only once
 // returns boolean indicating whether listener was added
