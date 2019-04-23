@@ -377,7 +377,7 @@ browserify-zlib@~0.2.0:
   dependencies:
     pako "~1.0.5"
 
-browserify@^16.2.3:
+browserify@16.2.3:
   version "16.2.3"
   resolved "https://registry.yarnpkg.com/browserify/-/browserify-16.2.3.tgz#7ee6e654ba4f92bce6ab3599c3485b1cc7a0ad0b"
   integrity sha512-zQt/Gd1+W+IY+h/xX2NYMW4orQWhqSwyV+xsblycTtpOuB27h1fZhhNQuipJ4t79ohw4P4mMem0jp/ZkISQtjQ==
@@ -948,7 +948,7 @@ es-to-primitive@^1.2.0:
     is-date-object "^1.0.1"
     is-symbol "^1.0.2"
 
-es6ify@^1.6.0:
+es6ify@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/es6ify/-/es6ify-1.6.0.tgz#e2925b71922b2d7f854f61979cd0d65cc2267255"
   integrity sha1-4pJbcZIrLX+FT2GXnNDWXMImclU=
