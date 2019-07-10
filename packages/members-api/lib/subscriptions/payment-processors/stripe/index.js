@@ -2,13 +2,16 @@ const api = require('./api');
 
 module.exports = class StripePaymentProcessor {
     constructor() {
-        this._ready = new Promise(() => {});
+        this._ready = new Promise((resolve, reject) => {
+            this._resolveReady = resolve;
+            this._rejectReady = reject;
+        });
     }
 
     configure(config) {
         const stripe = require('stripe')(config.secret_token);
 
-        this._ready = api.products.ensure(stripe, config.product).then((product) => {
+        api.products.ensure(stripe, config.product).then((product) => {
             return Promise.all(
                 config.plans.map(plan => api.plans.ensure(stripe, plan, product))
             ).then((plans) => {
@@ -21,7 +24,7 @@ module.exports = class StripePaymentProcessor {
                     plans
                 };
             });
-        });
+        }).then(this._resolveReady, this._rejectReady);
 
         return this._ready;
     }
