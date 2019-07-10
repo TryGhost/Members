@@ -169,7 +169,7 @@ function createStripeRequest(makeRequest) {
             switch (err.type) {
             case 'StripeCardError':
                 // Card declined
-                break;
+                throw err;
             case 'RateLimitError':
                 // Ronseal
                 return exponentiallyBackoff(makeRequest, ...args).catch((err) => {
@@ -182,18 +182,18 @@ function createStripeRequest(makeRequest) {
                 });
             case 'StripeInvalidRequestError':
                 // Invalid params to the request
-                break;
+                throw err;
             case 'StripeAPIError':
                 // Rare internal server error from stripe
-                break;
+                throw err;
             case 'StripeConnectionError':
                 // Weird network/https issue
-                break;
+                throw err;
             case 'StripeAuthenticationError':
                 // Invalid API Key (probably)
-                break;
+                throw err;
             default:
-                break;
+                throw err;
             }
         };
         return makeRequest(...args).catch(errorHandler);
