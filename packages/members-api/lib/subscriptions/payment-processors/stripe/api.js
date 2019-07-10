@@ -149,6 +149,34 @@ function createEnsurer(get, create, generateHashSeed) {
     };
 }
 
+function exponentialBackoff(makeRequest) {
+    return function attemptRequest(...args) {
+        return makeRequest(...args).catch((err) => {
+            if (err.type !== 'RateLimitError') {
+                throw err;
+            }
+
+            function backoffRequest(timeout, ...args) {
+                return new Promise(resolve => setTimeout(resolve, timeout)).then(() => {
+                    return makeRequest(...args).catch((err) => {
+                        if (err.type !== 'RateLimitError') {
+                            throw err;
+                        }
+
+                        if (timeout > 30000) {
+                            throw err;
+                        }
+
+                        return backoffRequest(timeout * 2, ...args);
+                    });
+                });
+            }
+
+            return backoffRequest(1000, ...args);
+        });
+    };
+}
+
 function createApi(resource, validResult, getAttrs, generateHashSeed) {
     const get = createGetter(resource, validResult);
     const create = createCreator(resource, getAttrs);
