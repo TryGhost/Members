@@ -26,6 +26,24 @@ const plans = createApi('plans', isActive, getPlanAttr, getPlanHashSeed);
 const products = createApi('products', isActive, getProductAttr, getProductHashSeed);
 const customers = createApi('customers', isNotDeleted, getCustomerAttr, getCustomerHashSeed);
 
+const _retrieve = exponentialBackoff(function (stripe, resource, id) {
+    return stripe[resource].retrieve(id);
+});
+
+const _create = exponentialBackoff(function (stripe, resource, object) {
+    return stripe[resource].create(object);
+});
+
+const _del = exponentialBackoff(function (stripe, resource, id) {
+    return stripe[resource].del(id);
+});
+
+const _createSource = exponentialBackoff(function (stripe, customerId, stripeToken) {
+    return stripe.customers.createSource(customerId, {
+        source: stripeToken
+    });
+});
+
 function removeSubscription(stripe, member) {
     return customers.get(stripe, member, member.email).then((customer) => {
         // CASE customer has no subscriptions
