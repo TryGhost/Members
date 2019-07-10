@@ -26,19 +26,19 @@ const plans = createApi('plans', isActive, getPlanAttr, getPlanHashSeed);
 const products = createApi('products', isActive, getProductAttr, getProductHashSeed);
 const customers = createApi('customers', isNotDeleted, getCustomerAttr, getCustomerHashSeed);
 
-const _retrieve = exponentialBackoff(function (stripe, resource, id) {
+const _retrieve = createStripeRequest(function (stripe, resource, id) {
     return stripe[resource].retrieve(id);
 });
 
-const _create = exponentialBackoff(function (stripe, resource, object) {
+const _create = createStripeRequest(function (stripe, resource, object) {
     return stripe[resource].create(object);
 });
 
-const _del = exponentialBackoff(function (stripe, resource, id) {
+const _del = createStripeRequest(function (stripe, resource, id) {
     return stripe[resource].del(id);
 });
 
-const _createSource = exponentialBackoff(function (stripe, customerId, stripeToken) {
+const _createSource = createStripeRequest(function (stripe, customerId, stripeToken) {
     return stripe.customers.createSource(customerId, {
         source: stripeToken
     });
@@ -163,32 +163,61 @@ function createEnsurer(get, create, generateHashSeed) {
     };
 }
 
-function exponentialBackoff(makeRequest) {
-    return function attemptRequest(...args) {
-        return makeRequest(...args).catch((err) => {
-            if (err.type !== 'RateLimitError') {
-                throw err;
-            }
-
-            function backoffRequest(timeout, ...args) {
-                return new Promise(resolve => setTimeout(resolve, timeout)).then(() => {
-                    return makeRequest(...args).catch((err) => {
-                        if (err.type !== 'RateLimitError') {
-                            throw err;
-                        }
-
-                        if (timeout > 30000) {
-                            throw err;
-                        }
-
-                        return backoffRequest(timeout * 2, ...args);
-                    });
+function createStripeRequest(makeRequest) {
+    return function stripeRequest(...args) {
+        const errorHandler = (err) => {
+            switch (err.type) {
+            case 'StripeCardError':
+                // Card declined
+                break;
+            case 'RateLimitError':
+                // Ronseal
+                return exponentiallyBackoff(makeRequest, ...args).catch((err) => {
+                    // We do not want to recurse further if we get RateLimitError
+                    // after running the exponential backoff
+                    if (err.type === 'RateLimitError') {
+                        throw err;
+                    }
+                    return errorHandler(err);
                 });
+            case 'StripeInvalidRequestError':
+                // Invalid params to the request
+                break;
+            case 'StripeAPIError':
+                // Rare internal server error from stripe
+                break;
+            case 'StripeConnectionError':
+                // Weird network/https issue
+                break;
+            case 'StripeAuthenticationError':
+                // Invalid API Key (probably)
+                break;
+            default:
+                break;
             }
-
-            return backoffRequest(1000, ...args);
-        });
+        };
+        return makeRequest(...args).catch(errorHandler);
     };
+}
+
+function exponentiallyBackoff(makeRequest, ...args) {
+    function backoffRequest(timeout, ...args) {
+        return new Promise(resolve => setTimeout(resolve, timeout)).then(() => {
+            return makeRequest(...args).catch((err) => {
+                if (err.type !== 'RateLimitError') {
+                    throw err;
+                }
+
+                if (timeout > 30000) {
+                    throw err;
+                }
+
+                return backoffRequest(timeout * 2, ...args);
+            });
+        });
+    }
+
+    return backoffRequest(1000, ...args);
 }
 
 function createApi(resource, validResult, getAttrs, generateHashSeed) {
