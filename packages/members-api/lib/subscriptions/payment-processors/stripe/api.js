@@ -53,7 +53,7 @@ function removeSubscription(stripe, member) {
 
         const subscription = customer.subscriptions.data[0];
 
-        return stripe.subscriptions.del(subscription.id);
+        return _del(stripe, 'subscriptions', subscription.id);
     });
 }
 
@@ -90,10 +90,8 @@ function createSubscription(stripe, member, metadata) {
             throw new Error('Customer already has a subscription');
         }
 
-        return stripe.customers.createSource(customer.id, {
-            source: metadata.stripeToken
-        }).then(() => {
-            return stripe.subscriptions.create({
+        return _createSource(stripe, customer.id, metadata.stripeToken).then(() => {
+            return _create(stripe, 'subscriptions', {
                 customer: customer.id,
                 items: [{plan: metadata.plan.id}],
                 coupon: metadata.coupon
@@ -117,7 +115,7 @@ module.exports = {
 function createGetter(resource, validResult) {
     return function get(stripe, object, idSeed) {
         const id = hash(idSeed);
-        return stripe[resource].retrieve(id)
+        return _retrieve(stripe, resource, id)
             .then((result) => {
                 if (validResult(result)) {
                     return result;
@@ -132,7 +130,9 @@ function createGetter(resource, validResult) {
 
 function createCreator(resource, getAttrs) {
     return function create(stripe, id, object, ...rest) {
-        return stripe[resource].create(
+        return _create(
+            stripe,
+            resource,
             Object.assign(getAttrs(object, ...rest), {id})
         );
     };
@@ -141,11 +141,7 @@ function createCreator(resource, getAttrs) {
 function createRemover(resource, get, generateHashSeed) {
     return function remove(stripe, object, ...rest) {
         return get(stripe, object, generateHashSeed(object, ...rest)).then((res) => {
-            return stripe[resource].del(res.id).then((result) => {
-                return result;
-            }, (err) => {
-                throw err;
-            });
+            return _del(stripe, resource, res.id);
         }).catch((err) => {
             if (err.code !== 'resource_missing') {
                 throw err;
