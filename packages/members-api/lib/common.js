@@ -1,28 +1,18 @@
-function getLogging() {
-    let logging = {};
-    let _logger = null;
-
-    logging.error = (...args) => {
-        _logger ? _logger.error(...args) : null;
-    };
-
-    logging.info = (...args) => {
-        _logger ? _logger.info(...args) : null;
-    };
-
-    logging.warn = (...args) => {
-        _logger ? _logger.warn(...args) : null;
-    };
-
-    logging.updateLogger = (logger) => {
-        _logger = logger;
-    };
-
-    return logging;
-}
+let currentLogger = {
+    error: global.console.error,
+    info: global.console.info,
+    warn: global.console.warn
+};
 
 module.exports = {
     get logging() {
-        return getLogging();
+        const loggerInterface = {};
+        return Object.assign(loggerInterface, currentLogger, {
+            updateLogger(newLogger) {
+                currentLogger = newLogger;
+                // Overwrite any existing reference to loggerInterface
+                Object.assign(loggerInterface, newLogger);
+            }
+        });
     }
 };
