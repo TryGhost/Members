@@ -7,6 +7,7 @@ const Cookies = require('./lib/cookies');
 const Tokens = require('./lib/tokens');
 const Users = require('./lib/users');
 const Subscriptions = require('./lib/subscriptions');
+const common = require('./lib/common');
 
 module.exports = function MembersApi({
     authConfig: {
@@ -25,8 +26,11 @@ module.exports = function MembersApi({
     deleteMember,
     listMembers,
     sendEmail,
-    siteConfig
+    siteConfig,
+    logger
 }) {
+    common.logging.updateLogger(logger);
+
     const {encodeToken, decodeToken, getPublicKeys} = Tokens({privateKey, publicKey, issuer});
 
     let subscriptions = new Subscriptions(paymentConfig);

@@ -1,6 +1,9 @@
+const common = require('../../../../common');
+
 module.exports = function createStripeRequest(makeRequest) {
     return function stripeRequest(...args) {
         const errorHandler = (err) => {
+            common.logging.error(err);
             switch (err.type) {
             case 'StripeCardError':
                 // Card declined
