@@ -8,7 +8,7 @@ module.exports = {
     get logging() {
         const loggerInterface = {};
         return Object.assign(loggerInterface, currentLogger, {
-            updateLogger(newLogger) {
+            setLogger(newLogger) {
                 currentLogger = newLogger;
                 // Overwrite any existing reference to loggerInterface
                 Object.assign(loggerInterface, newLogger);
