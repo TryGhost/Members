@@ -26,11 +26,8 @@ module.exports = function MembersApi({
     deleteMember,
     listMembers,
     sendEmail,
-    siteConfig,
-    logger
+    siteConfig
 }) {
-    common.logging.updateLogger(logger);
-
     const {encodeToken, decodeToken, getPublicKeys} = Tokens({privateKey, publicKey, issuer});
 
     let subscriptions = new Subscriptions(paymentConfig);
@@ -258,6 +255,8 @@ module.exports = function MembersApi({
         });
         siteConfig = data.siteConfig;
     };
+
+    apiInstance.setLogger = common.logging.setLogger;
 
     return apiInstance;
 };
