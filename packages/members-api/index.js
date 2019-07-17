@@ -239,22 +239,6 @@ module.exports = function MembersApi({
             return users.get({id});
         });
     };
-    apiInstance.reconfigureSettings = function (data) {
-        subscriptions = new Subscriptions(data.paymentConfig);
-        users = Users({
-            subscriptions,
-            createMember,
-            updateMember,
-            getMember,
-            deleteMember,
-            validateMember,
-            sendEmail,
-            encodeToken,
-            listMembers,
-            decodeToken
-        });
-        siteConfig = data.siteConfig;
-    };
 
     apiInstance.setLogger = common.logging.setLogger;
 
