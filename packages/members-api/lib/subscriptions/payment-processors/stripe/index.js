@@ -10,6 +10,7 @@ module.exports = class StripePaymentProcessor {
 
     configure(config) {
         const stripe = require('stripe')(config.secret_token);
+        stripe.__TEST_MODE__ = config.secret_token.startsWith('sk_test_');
 
         api.products.ensure(stripe, config.product).then((product) => {
             return Promise.all(

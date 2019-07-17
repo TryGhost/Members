@@ -16,9 +16,14 @@ function createDeterministicApi(resource, validResult, getAttrs, generateHashSee
     };
 }
 
+function prefixHashSeed(stripe, seed) {
+    const prefix = stripe.__TEST_MODE__ ? 'test_' : 'prod_';
+    return prefix + seed;
+}
+
 function createGetter(resource, validResult) {
     return function get(stripe, object, idSeed) {
-        const id = hash(idSeed);
+        const id = hash(prefixHashSeed(stripe, idSeed));
         return stripeRetrieve(stripe, resource, id)
             .then((result) => {
                 if (validResult(result)) {
