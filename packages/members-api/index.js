@@ -1,4 +1,5 @@
 const {Router} = require('express');
+const {EventEmitter} = require('events');
 const body = require('body-parser');
 
 const {getData, handleError} = require('./lib/util');
@@ -219,6 +220,15 @@ module.exports = function MembersApi({
     });
 
     const apiInstance = new Router();
+    const eventBus = new EventEmitter();
+
+    subscriptions._ready.then(() => {
+        eventBus.emit('ready');
+    }, (err) => {
+        eventBus.emit('error', err);
+    });
+
+    apiInstance.bus = eventBus;
 
     apiInstance.use(apiRouter);
     apiInstance.use('/static', staticRouter);
