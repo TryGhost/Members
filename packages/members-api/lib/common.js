@@ -6,12 +6,12 @@ let currentLogger = {
 
 module.exports = {
     get logging() {
-        const loggerInterface = {};
-        return Object.assign(loggerInterface, currentLogger, {
+        const loggerInterface = Object.create(currentLogger);
+        return Object.assign(loggerInterface, {
             setLogger(newLogger) {
                 currentLogger = newLogger;
                 // Overwrite any existing reference to loggerInterface
-                Object.assign(loggerInterface, newLogger);
+                Object.assign(loggerInterface, Object.create(newLogger));
             }
         });
     }
