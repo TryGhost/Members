@@ -56,15 +56,24 @@ async function main() {
         }
     });
 
-    // POST /signin
-    const token = await service.sendMagicLink({
+    /**
+     *  POST /signin
+     */
+    const {token, info} = await service.sendMagicLink({
         email: 'test@example.com',
         user: {
             id: 'some-id'
         }
     });
 
-    // GET /signin
+    // https://nodemailer.com/about/#example
+    // Preview only available when sending through an Ethereal account
+    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+
+    /**
+     *  GET /signin
+     */
     const user = await service.getUserFromToken(token);
     // createSomeKindOfSession(user);
 }
