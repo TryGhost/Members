@@ -19,7 +19,7 @@ const MagicLink = require('@tryghost/magic-link');
 
 async function main() {
     const generateKeyPair = util.promisify(crypto.generateKeyPair);
-    const { publicKey, privateKey } = await generateKeyPair('rsa', {
+    const {publicKey, privateKey} = await generateKeyPair('rsa', {
         modulusLength: 4096,
         publicKeyEncoding: {
             type: 'pkcs1',
@@ -51,7 +51,7 @@ async function main() {
         transporter,
         publicKey,
         privateKey,
-        getUrl(token) {
+        getSigninURL(token) {
             return `http://example.com/signin?token=${token}`
         }
     });
