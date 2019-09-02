@@ -2,8 +2,8 @@ const jwt = require('jsonwebtoken');
 module.exports = MagicLink;
 
 /**
- * @typedef { Buffer } RsaPublicKey
- * @typedef { Buffer } RsaPrivateKey
+ * @typedef { Buffer | string } RsaPublicKey
+ * @typedef { Buffer | string } RsaPrivateKey
  * @typedef { import('nodemailer').Transporter } MailTransporter
  * @typedef { import('nodemailer').SentMessageInfo } SentMessageInfo
  * @typedef { string } JSONWebToken
@@ -39,8 +39,8 @@ function defaultGetHTML(url) {
  * @param {RsaPublicKey} options.publicKey
  * @param {RsaPrivateKey} options.privateKey
  * @param {(token: JSONWebToken) => URL} options.getSigninURL
- * @param {typeof defaultGetText} options.getText?
- * @param {typeof defaultGetHTML} options.getHTML?
+ * @param {typeof defaultGetText} [options.getText]
+ * @param {typeof defaultGetHTML} [options.getHTML]
  */
 function MagicLink(options) {
     if (!options || !options.transporter || !options.publicKey || !options.privateKey || !options.getSigninURL) {
