@@ -5,6 +5,7 @@ module.exports = MagicLink;
  * @typedef { Buffer } RsaPublicKey
  * @typedef { Buffer } RsaPrivateKey
  * @typedef { import('nodemailer').Transporter } MailTransporter
+ * @typedef { import('nodemailer').SentMessageInfo } SentMessageInfo
  * @typedef { string } JSONWebToken
  * @typedef { string } URL
  */
@@ -59,7 +60,7 @@ function MagicLink(options) {
  * @param {object} options
  * @param {string} options.email - The email to send magic link to
  * @param {object} options.user - The user object to associate with the magic link
- * @returns {Promise<JSONWebToken>}
+ * @returns {Promise<{token: JSONWebToken, info: SentMessageInfo}>}
  */
 MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
     const token = jwt.sign({
@@ -74,13 +75,13 @@ MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
 
     const url = this.getSigninURL(token);
 
-    await this.transporter.sendMail({
+    const info = await this.transporter.sendMail({
         to: options.email,
         text: this.getText(url),
         html: this.getHTML(url)
     });
 
-    return token;
+    return {token, info};
 };
 
 /**

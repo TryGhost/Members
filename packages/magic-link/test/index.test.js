@@ -41,7 +41,7 @@ describe('MagicLink', function () {
                     id: 420
                 }
             };
-            const token = await service.sendMagicLink(args);
+            const {token} = await service.sendMagicLink(args);
 
             should.ok(options.getSigninURL.calledOnce);
             should.ok(options.getSigninURL.firstCall.calledWithExactly(token));
@@ -74,7 +74,7 @@ describe('MagicLink', function () {
                 }
             };
 
-            const token = await service.sendMagicLink(args);
+            const {token} = await service.sendMagicLink(args);
             const user = service.getUserFromToken(token);
 
             should.deepEqual(user, args.user);
