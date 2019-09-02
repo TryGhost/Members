@@ -11,7 +11,7 @@ or
 
 ## Usage
 
-```
+```js
 const util = require('util');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
