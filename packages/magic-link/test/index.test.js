@@ -1,10 +1,8 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
+const should = require('should');
+const MagicLink = require('../');
 
-describe('Hello world', function () {
-    it('Runs a test', function () {
-        // TODO: Write me!
-        'hello'.should.eql('hello');
+describe('MagicLink', function () {
+    it('Exports a function', function () {
+        should.equal(typeof MagicLink, 'function');
     });
 });
