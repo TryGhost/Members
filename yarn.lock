@@ -7760,7 +7760,7 @@ prompts@^2.2.1:
     kleur "^3.0.3"
     sisteransi "^1.0.3"
 
-prop-types@^15.5.10, prop-types@^15.6.1, prop-types@^15.6.2:
+prop-types@15.7.2, prop-types@^15.6.1, prop-types@^15.6.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -7974,12 +7974,12 @@ react-lifecycles-compat@^3.0.4:
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
 
-react-stripe-elements@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/react-stripe-elements/-/react-stripe-elements-2.0.3.tgz#cfd0f68d00ce52a07aab1cb2b59b29dc12309486"
-  integrity sha512-aKLiWyfP0n3Gq42BKykULgoruNVRXEaeYh8NSokdgH3ubGU3nsHFZJg3LgbT/XOquttDGHE7kLhleaX+UnN81A==
+react-stripe-elements@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/react-stripe-elements/-/react-stripe-elements-5.0.0.tgz#3a67717ddc9580c4dad9d45b672a9cf6c8a6dda4"
+  integrity sha512-zYYmlaROlkRV+Naz2abUZL4DnnQFzlSKc1PmAx7DKDi8PdFUEMiXk5kepPFlIfhwzq5fgoSptT2Y3Jri0p7cAQ==
   dependencies:
-    prop-types "^15.5.10"
+    prop-types "15.7.2"
 
 read-cache@^1.0.0:
   version "1.0.0"
