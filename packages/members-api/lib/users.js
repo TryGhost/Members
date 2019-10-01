@@ -1,3 +1,5 @@
+const hash = str => require('crypto').createHash('sha256').update(str).digest('base64');
+
 module.exports = function ({
     sendEmailWithMagicLink,
     stripe,
@@ -15,6 +17,7 @@ module.exports = function ({
 
         if (!stripe) {
             return Object.assign(member, {
+                public_id: hash(member.id),
                 stripe: {
                     subscriptions: []
                 }
@@ -24,6 +27,7 @@ module.exports = function ({
             const subscriptions = await stripe.getActiveSubscriptions(member);
 
             return Object.assign(member, {
+                public_id: hash(member.id),
                 stripe: {
                     subscriptions
                 }
