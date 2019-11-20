@@ -62,7 +62,7 @@ module.exports = class StripePaymentProcessor {
                         'invoice.payment_failed'
                     ]
                 });
-                this._webhookSecret = webhook.secret;
+                this._webhookSecret = process.env.WEBHOOK_SECRET || webhook.secret;
             } catch (err) {
                 this.logging.warn(err);
                 this._webhookSecret = process.env.WEBHOOK_SECRET;
