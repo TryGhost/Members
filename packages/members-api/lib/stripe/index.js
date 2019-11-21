@@ -65,7 +65,6 @@ module.exports = class StripePaymentProcessor {
                 this._webhookSecret = process.env.WEBHOOK_SECRET || webhook.secret;
             } catch (err) {
                 this.logging.warn(err);
-                this._webhookSecret = process.env.WEBHOOK_SECRET;
             }
             debug(`Webhook secret set to ${this._webhookSecret}`);
         } catch (err) {
