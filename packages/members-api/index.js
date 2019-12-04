@@ -114,7 +114,8 @@ module.exports = function MembersApi({
     const middleware = {
         sendMagicLink: Router(),
         createCheckoutSession: Router(),
-        handleStripeWebhook: Router()
+        handleStripeWebhook: Router(),
+        cancelSubscription: Router({mergeParams: true})
     };
 
     middleware.sendMagicLink.use(body.json(), async function (req, res) {
@@ -229,6 +230,46 @@ module.exports = function MembersApi({
             res.writeHead(400);
             res.end();
         }
+    });
+
+    middleware.cancelSubscription.use(ensureStripe, body.json(), async function (req, res) {
+        const identity = req.body.identity;
+        const subscriptionId = req.params.id;
+
+        let email;
+        try {
+            if (!identity) {
+                email = null;
+            } else {
+                const claims = await decodeToken(identity);
+                email = claims.sub;
+            }
+        } catch (err) {
+            res.writeHead(401);
+            return res.end('Unauthorized');
+        }
+
+        const member = email ? await users.get({email}) : null;
+
+        // Don't allow removing subscriptions that don't belong to the member
+        if (member) {
+            if (!member.stripe.subscriptions.length) {
+                res.writeHead(403);
+                return res.end('No permission');
+            } else if (member.stripe.subscriptions.length) {
+                let subscriptions = member.stripe.subscriptions.filter(sub => sub.id === subscriptionId);
+
+                if (!subscriptions.length) {
+                    res.writeHead(403);
+                    return res.end('No permission');
+                }
+            }
+        }
+
+        await stripe.cancelSubscription(subscriptionId);
+
+        res.writeHead(204);
+        res.end();
     });
 
     const getPublicConfig = function () {
