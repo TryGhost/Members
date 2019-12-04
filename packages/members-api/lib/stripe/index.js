@@ -135,6 +135,10 @@ module.exports = class StripePaymentProcessor {
         return true;
     }
 
+    async cancelSubscription(id) {
+        return del(this._stripe, 'subscriptions', id);
+    }
+
     async getSubscriptions(member) {
         const metadata = await this.storage.get(member);
 
