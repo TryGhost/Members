@@ -236,36 +236,35 @@ module.exports = function MembersApi({
         const identity = req.body.identity;
         const subscriptionId = req.params.id;
 
-        let email;
+        let member;
+
         try {
             if (!identity) {
                 throw new common.errors.BadRequestError({
                     message: 'Cancel membership failed! Could not find member'
                 });
-            } else {
-                const claims = await decodeToken(identity);
-                email = claims.sub;
+            }
+
+            const claims = await decodeToken(identity);
+            const email = claims.sub;
+            member = email ? await users.get({email}) : null;
+
+            if (!member) {
+                throw new common.errors.BadRequestError({
+                    message: 'Cancel membership failed! Could not find member'
+                });
             }
         } catch (err) {
             res.writeHead(401);
             return res.end('Unauthorized');
         }
 
-        const member = email ? await users.get({email}) : null;
-
         // Don't allow removing subscriptions that don't belong to the member
-        if (member) {
-            if (!member.stripe.subscriptions.length) {
-                res.writeHead(403);
-                return res.end('No permission');
-            } else if (member.stripe.subscriptions.length) {
-                let subscriptions = member.stripe.subscriptions.filter(sub => sub.id === subscriptionId);
+        const hasSubscription = member.stripe.subscriptions.some(sub => sub.id === subscriptionId);
 
-                if (!subscriptions.length) {
-                    res.writeHead(403);
-                    return res.end('No permission');
-                }
-            }
+        if (!hasSubscription) {
+            res.writeHead(403);
+            return res.end('No permission');
         }
 
         await stripe.cancelSubscription(subscriptionId);
