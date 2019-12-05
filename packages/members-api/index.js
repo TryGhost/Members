@@ -239,7 +239,9 @@ module.exports = function MembersApi({
         let email;
         try {
             if (!identity) {
-                email = null;
+                throw new common.errors.BadRequestError({
+                    message: 'Cancel membership failed! Could not find member'
+                });
             } else {
                 const claims = await decodeToken(identity);
                 email = claims.sub;
