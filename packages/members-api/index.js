@@ -260,14 +260,14 @@ module.exports = function MembersApi({
         }
 
         // Don't allow removing subscriptions that don't belong to the member
-        const hasSubscription = member.stripe.subscriptions.some(sub => sub.id === subscriptionId);
+        const subscription = member.stripe.subscriptions.find(sub => sub.id === subscriptionId);
 
-        if (!hasSubscription) {
+        if (!subscription) {
             res.writeHead(403);
             return res.end('No permission');
         }
 
-        await stripe.cancelSubscription(subscriptionId);
+        await stripe.cancelSubscription(subscription);
 
         res.writeHead(204);
         res.end();

@@ -128,15 +128,19 @@ module.exports = class StripePaymentProcessor {
             return subscription.status !== 'canceled';
         });
 
-        await Promise.all(activeSubscriptions.map((subscription) => {
+        await Promise.all(activeSubscriptions.map(async (subscription) => {
+            await this.handleCustomerSubscriptionDelete(subscription);
+
             return del(this._stripe, 'subscriptions', subscription.id);
         }));
 
         return true;
     }
 
-    async cancelSubscription(id) {
-        return del(this._stripe, 'subscriptions', id);
+    async cancelSubscription(subscription) {
+        await this.handleCustomerSubscriptionDelete(subscription);
+
+        return del(this._stripe, 'subscriptions', subscription.id);
     }
 
     async getSubscriptions(member) {
@@ -179,6 +183,19 @@ module.exports = class StripePaymentProcessor {
         });
     }
 
+    /**
+     * Handles immediate subscription deletion
+     * @param {Object} subscription
+     */
+    async handleCustomerSubscriptionDelete(subscription) {
+        return await this.storage.set({
+            subscription: {
+                subscription_id: subscription.id,
+                status: 'canceled'
+            }
+        });
+    }
+
     async handleCheckoutSessionCompletedWebhook(member, customer) {
         await this._updateCustomer(member, customer);
         if (!customer.subscriptions || !customer.subscriptions.data) {
@@ -189,6 +206,10 @@ module.exports = class StripePaymentProcessor {
         }
     }
 
+    /**
+     * Handles subscription deletion that comes from async source, e.g.: webhook
+     * @param {Object} subscription
+     */
     async handleCustomerSubscriptionDeletedWebhook(subscription) {
         await this._updateSubscription(subscription);
     }
