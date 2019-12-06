@@ -234,6 +234,7 @@ module.exports = function MembersApi({
 
     middleware.cancelSubscription.use(ensureStripe, body.json(), async function (req, res) {
         const identity = req.body.identity;
+        const cancel = req.body.cancel;
         const subscriptionId = req.params.id;
 
         let member;
@@ -262,12 +263,16 @@ module.exports = function MembersApi({
         // Don't allow removing subscriptions that don't belong to the member
         const subscription = member.stripe.subscriptions.find(sub => sub.id === subscriptionId);
 
+        if (cancel !== undefined) {
+            subscription.cancel_at_period_end = cancel;
+        }
+
         if (!subscription) {
             res.writeHead(403);
             return res.end('No permission');
         }
 
-        await stripe.cancelSubscription(subscription);
+        await stripe.updateSubscriptionFromClient(subscription);
 
         res.writeHead(204);
         res.end();

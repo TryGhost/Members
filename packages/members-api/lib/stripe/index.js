@@ -1,5 +1,5 @@
 const debug = require('ghost-ignition').debug('stripe');
-const {retrieve, list, create, del} = require('./api/stripeRequests');
+const {retrieve, list, create, update, del} = require('./api/stripeRequests');
 const api = require('./api');
 
 const STRIPE_API_VERSION = '2019-09-09';
@@ -137,10 +137,13 @@ module.exports = class StripePaymentProcessor {
         return true;
     }
 
-    async cancelSubscription(subscription) {
-        await this.handleCustomerSubscriptionDelete(subscription);
+    async updateSubscriptionFromClient(subscription) {
+        const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, {
+            cancel_at_period_end: subscription.cancel_at_period_end
+        });
+        await this._updateSubscription(updatedSubscription);
 
-        return del(this._stripe, 'subscriptions', subscription.id);
+        return updatedSubscription;
     }
 
     async getSubscriptions(member) {
@@ -260,6 +263,7 @@ module.exports = class StripePaymentProcessor {
 
                 subscription_id: subscription.id,
                 status: subscription.status,
+                cancel_at_period_end: subscription.cancel_at_period_end,
                 current_period_end: new Date(subscription.current_period_end * 1000),
                 start_date: new Date(subscription.start_date * 1000),
                 default_payment_card_last4: payment && payment.card && payment.card.last4 || null,
