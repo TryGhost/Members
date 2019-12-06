@@ -19,6 +19,7 @@ To add a new package to the repo:
    - install [slimer](https://github.com/TryGhost/slimer)
    - run `slimer new <package name>`
 
+**NOTE**: For most packages in this repo you would need to have [Stripe CLI](https://github.com/stripe/stripe-cli) installed and run this command `stripe listen  --forward-to http://localhost:2368/members/webhooks/stripe/` to be able to listen to webhooks. Ghost instance should be started with `WEBHOOK_SECRET` environmental variable set to whatever the output of above command is (look for string like: `whsec_************`). For example, full command to start Ghost would be: `WEBHOOK_SECRET=whsec_rm6Vc8790h5GOICvFOHhJJMfmfdYxw4P yarn start`
 
 ## Run
 
