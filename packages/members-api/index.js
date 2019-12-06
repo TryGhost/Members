@@ -263,9 +263,13 @@ module.exports = function MembersApi({
         // Don't allow removing subscriptions that don't belong to the member
         const subscription = member.stripe.subscriptions.find(sub => sub.id === subscriptionId);
 
-        if (cancel !== undefined) {
-            subscription.cancel_at_period_end = cancel;
+        if (cancel === undefined) {
+            throw new common.errors.BadRequestError({
+                message: 'Cancel membership failed! Should provide "cancel" field'
+            });
         }
+
+        subscription.cancel_at_period_end = cancel;
 
         if (!subscription) {
             res.writeHead(403);
