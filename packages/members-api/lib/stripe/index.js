@@ -173,6 +173,7 @@ module.exports = class StripePaymentProcessor {
                 status: subscription.status,
                 start_date: subscription.start_date,
                 default_payment_card_last4: subscription.default_payment_card_last4,
+                cancel_at_period_end: subscription.cancel_at_period_end,
                 current_period_end: subscription.current_period_end
             };
         });
