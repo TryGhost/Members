@@ -263,6 +263,11 @@ module.exports = function MembersApi({
         // Don't allow removing subscriptions that don't belong to the member
         const subscription = member.stripe.subscriptions.find(sub => sub.id === subscriptionId);
 
+        if (!subscription) {
+            res.writeHead(403);
+            return res.end('No permission');
+        }
+
         if (cancel === undefined) {
             throw new common.errors.BadRequestError({
                 message: 'Cancel membership failed! Should provide "cancel" field'
@@ -270,11 +275,6 @@ module.exports = function MembersApi({
         }
 
         subscription.cancel_at_period_end = cancel;
-
-        if (!subscription) {
-            res.writeHead(403);
-            return res.end('No permission');
-        }
 
         await stripe.updateSubscriptionFromClient(subscription);
 
