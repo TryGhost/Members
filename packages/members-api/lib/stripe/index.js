@@ -128,9 +128,7 @@ module.exports = class StripePaymentProcessor {
             return subscription.status !== 'canceled';
         });
 
-        await Promise.all(activeSubscriptions.map(async (subscription) => {
-            await this.handleCustomerSubscriptionDelete(subscription);
-
+        await Promise.all(activeSubscriptions.map((subscription) => {
             return del(this._stripe, 'subscriptions', subscription.id);
         }));
 
