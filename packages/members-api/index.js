@@ -275,7 +275,7 @@ module.exports = function MembersApi({
             });
         }
 
-        subscription.cancel_at_period_end = cancelAtPeriodEnd;
+        subscription.cancel_at_period_end = !!(cancelAtPeriodEnd);
 
         await stripe.updateSubscriptionFromClient(subscription);
 
