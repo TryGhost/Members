@@ -270,7 +270,8 @@ module.exports = function MembersApi({
 
         if (cancelAtPeriodEnd === undefined) {
             throw new common.errors.BadRequestError({
-                message: 'Cancel membership failed! Should provide "cancel" field'
+                message: 'Canceling membership failed!',
+                help: 'Request should contain boolean "cancel" field.'
             });
         }
 
