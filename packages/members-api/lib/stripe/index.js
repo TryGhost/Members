@@ -185,19 +185,6 @@ module.exports = class StripePaymentProcessor {
         });
     }
 
-    /**
-     * Handles immediate subscription deletion
-     * @param {Object} subscription
-     */
-    async handleCustomerSubscriptionDelete(subscription) {
-        return await this.storage.set({
-            subscription: {
-                subscription_id: subscription.id,
-                status: 'canceled'
-            }
-        });
-    }
-
     async handleCheckoutSessionCompletedWebhook(member, customer) {
         await this._updateCustomer(member, customer);
         if (!customer.subscriptions || !customer.subscriptions.data) {
