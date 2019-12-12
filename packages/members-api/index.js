@@ -234,7 +234,7 @@ module.exports = function MembersApi({
 
     middleware.cancelSubscription.use(ensureStripe, body.json(), async function (req, res) {
         const identity = req.body.identity;
-        const cancel = req.body.cancel;
+        const cancelAtPeriodEnd = req.body.cancel_at_period_end;
         const subscriptionId = req.params.id;
 
         let member;
@@ -268,13 +268,13 @@ module.exports = function MembersApi({
             return res.end('No permission');
         }
 
-        if (cancel === undefined) {
+        if (cancelAtPeriodEnd === undefined) {
             throw new common.errors.BadRequestError({
                 message: 'Cancel membership failed! Should provide "cancel" field'
             });
         }
 
-        subscription.cancel_at_period_end = cancel;
+        subscription.cancel_at_period_end = cancelAtPeriodEnd;
 
         await stripe.updateSubscriptionFromClient(subscription);
 
