@@ -115,7 +115,7 @@ module.exports = function MembersApi({
         sendMagicLink: Router(),
         createCheckoutSession: Router(),
         handleStripeWebhook: Router(),
-        cancelSubscription: Router({mergeParams: true})
+        updateSubscription: Router({mergeParams: true})
     };
 
     middleware.sendMagicLink.use(body.json(), async function (req, res) {
@@ -232,7 +232,7 @@ module.exports = function MembersApi({
         }
     });
 
-    middleware.cancelSubscription.use(ensureStripe, body.json(), async function (req, res) {
+    middleware.updateSubscription.use(ensureStripe, body.json(), async function (req, res) {
         const identity = req.body.identity;
         const cancelAtPeriodEnd = req.body.cancel_at_period_end;
         const subscriptionId = req.params.id;
