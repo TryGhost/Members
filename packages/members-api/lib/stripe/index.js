@@ -195,10 +195,6 @@ module.exports = class StripePaymentProcessor {
         }
     }
 
-    /**
-     * Handles subscription deletion that comes from async source, e.g.: webhook
-     * @param {Object} subscription
-     */
     async handleCustomerSubscriptionDeletedWebhook(subscription) {
         await this._updateSubscription(subscription);
     }
