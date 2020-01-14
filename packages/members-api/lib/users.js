@@ -15,7 +15,7 @@ async function createMember({email, name, note}) {
 
 async function getMember(data, options = {}) {
     if (!data.email && !data.id && !data.uuid) {
-        return Promise.resolve(null);
+        return null;
     }
     const model = await Member.findOne(data, options);
     if (!model) {
