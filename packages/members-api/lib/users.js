@@ -3,13 +3,13 @@ const common = require('./common');
 
 let Member;
 
-async function createMember({email, name, note}, options = {}) {
+async function createMember({email, name, note}) {
     const model = await Member.add({
         email,
         name,
         note
     });
-    const member = model.toJSON(options);
+    const member = model.toJSON();
     return member;
 }
 
@@ -56,7 +56,6 @@ function listMembers(options) {
 }
 
 module.exports = function ({
-    sendEmailWithMagicLink,
     stripe,
     memberModel
 }) {
@@ -135,13 +134,9 @@ module.exports = function ({
         };
     }
 
-    async function create(data, options = {}) {
+    async function create(data) {
         debug(`create email:${data.email}`);
         const member = await createMember(data);
-        if (options.sendEmail) {
-            debug(`create sending email to ${member.email}`);
-            await sendEmailWithMagicLink(member.email, options.emailType);
-        }
         return member;
     }
 
