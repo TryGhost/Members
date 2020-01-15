@@ -69,6 +69,12 @@ module.exports = function ({
         return await stripe.getActiveSubscriptions(member);
     }
 
+    async function destroyStripeSubscriptions(member) {
+        if (stripe) {
+            await stripe.cancelAllSubscriptions(member);
+        }
+    }
+
     async function get(data, options) {
         debug(`get id:${data.id} email:${data.email}`);
         const member = await getMember(data, options);
@@ -96,10 +102,10 @@ module.exports = function ({
         if (!member) {
             return;
         }
-        if (stripe) {
-            await stripe.cancelAllSubscriptions(member);
-        }
-        return deleteMember(data, options);
+
+        await destroyStripeSubscriptions(member);
+
+        return deleteMember(data);
     }
 
     async function update(data, options) {
@@ -139,6 +145,7 @@ module.exports = function ({
         list,
         get,
         destroy,
-        getStripeSubscriptions
+        getStripeSubscriptions,
+        destroyStripeSubscriptions
     };
 };
