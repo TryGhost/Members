@@ -61,6 +61,14 @@ module.exports = function ({
 }) {
     Member = memberModel;
 
+    async function getStripeSubscriptions(member) {
+        if (!stripe) {
+            return {subscriptions: []};
+        }
+
+        return await stripe.getActiveSubscriptions(member);
+    }
+
     async function get(data, options) {
         debug(`get id:${data.id} email:${data.email}`);
         const member = await getMember(data, options);
@@ -68,15 +76,8 @@ module.exports = function ({
             return member;
         }
 
-        if (!stripe) {
-            return Object.assign(member, {
-                stripe: {
-                    subscriptions: []
-                }
-            });
-        }
         try {
-            const subscriptions = await stripe.getActiveSubscriptions(member);
+            const subscriptions = await getStripeSubscriptions(member);
 
             return Object.assign(member, {
                 stripe: {
@@ -111,15 +112,7 @@ module.exports = function ({
         const {meta, members} = await listMembers(options);
 
         const membersWithSubscriptions = await Promise.all(members.map(async function (member) {
-            if (!stripe) {
-                return Object.assign(member, {
-                    stripe: {
-                        subscriptions: []
-                    }
-                });
-            }
-
-            const subscriptions = await stripe.getActiveSubscriptions(member);
+            const subscriptions = await getStripeSubscriptions(member);
 
             return Object.assign(member, {
                 stripe: {
@@ -145,6 +138,7 @@ module.exports = function ({
         update,
         list,
         get,
-        destroy
+        destroy,
+        getStripeSubscriptions
     };
 };
