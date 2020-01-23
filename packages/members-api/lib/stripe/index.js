@@ -177,6 +177,28 @@ module.exports = class StripePaymentProcessor {
         });
     }
 
+    async setComplimentarySubscription(member) {
+        const subscriptions = await this.getSubscriptions(member);
+        const complimentaryPlan = this._plans.find(plan => (plan.nickname === 'Complimentary'));
+
+        // TODO: check if already on any plan or is on the "Complimentary" one
+        if (!subscriptions.customers) {
+            const customer = await create(this._stripe, 'customers', {
+                email: member.email
+            });
+
+            await this._updateCustomer(member, customer);
+            const subscription = await create(this._stripe, 'subscriptions', {
+                customer: customer.id,
+                items: [{
+                    plan: complimentaryPlan.id
+                }]
+            });
+
+            await this._updateSubscription(subscription);
+        }
+    }
+
     async getActiveSubscriptions(member) {
         const subscriptions = await this.getSubscriptions(member);
 
