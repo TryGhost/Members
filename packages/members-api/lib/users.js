@@ -81,6 +81,12 @@ module.exports = function ({
         }
     }
 
+    async function cancelComplimentarySubscription(member) {
+        if (stripe) {
+            await stripe.cancelComplimentarySubscription(member);
+        }
+    }
+
     async function get(data, options) {
         debug(`get id:${data.id} email:${data.email}`);
         const member = await getMember(data, options);
