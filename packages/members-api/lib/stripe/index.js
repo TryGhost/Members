@@ -182,9 +182,9 @@ module.exports = class StripePaymentProcessor {
         const complimentaryPlan = this._plans.find(plan => (plan.nickname === 'Complimentary'));
 
         // TODO: check if already on any plan or is on the "Complimentary" one
-        if (!subscriptions.customers) {
+        if (!subscriptions.length) {
             const customer = await create(this._stripe, 'customers', {
-                email: member.email
+                email: member.email || member.get('email')
             });
 
             await this._updateCustomer(member, customer);
