@@ -154,6 +154,12 @@ module.exports = function MembersApi({
             return res.end('Bad Request.');
         }
 
+        // NOTE: never allow "Complimenatry" plan to be subscribed to from the client
+        if (plan.toLowerCase() === 'complimentary') {
+            res.writeHead(400);
+            return res.end('Bad Request.');
+        }
+
         let email;
         try {
             if (!identity) {
