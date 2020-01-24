@@ -130,7 +130,7 @@ module.exports = class StripePaymentProcessor {
 
         for (const subscription of activeSubscriptions) {
             const updatedSubscription = await del(this._stripe, 'subscriptions', subscription.id);
-            await await this._updateSubscription(updatedSubscription);
+            await this._updateSubscription(updatedSubscription);
         }
 
         return true;
