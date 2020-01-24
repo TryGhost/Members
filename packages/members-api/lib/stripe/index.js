@@ -207,7 +207,7 @@ module.exports = class StripePaymentProcessor {
 
     async cancelComplimentarySubscription(member) {
         // NOTE: a more explicit way would be cancelling just the "Complimentary" subscription, but doing it
-        //        through existing method achieves the same as there should be only one subscription at a time
+        //       through existing method achieves the same as there should be only one subscription at a time
         await this.cancelAllSubscriptions(member);
     }
 
