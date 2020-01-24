@@ -200,6 +200,7 @@ module.exports = class StripePaymentProcessor {
                     proration_behavior: 'none',
                     plan: complimentaryPlan.id
                 });
+
                 await this._updateSubscription(updatedSubscription);
             }
         }
