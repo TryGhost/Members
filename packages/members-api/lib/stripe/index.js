@@ -178,16 +178,12 @@ module.exports = class StripePaymentProcessor {
     }
 
     async setComplimentarySubscription(member) {
-        const subscriptions = await this.getSubscriptions(member);
+        const subscriptions = await this.getActiveSubscriptions(member);
         const complimentaryPlan = this._plans.find(plan => (plan.nickname === 'Complimentary'));
 
-        // TODO: check if already on any plan or is on the "Complimentary" one
-        if (!subscriptions.length) {
-            const customer = await create(this._stripe, 'customers', {
-                email: member.email || member.get('email')
-            });
+        const customer = await this._customerForMemberCheckoutSession(member);
 
-            await this._updateCustomer(member, customer);
+        if (!subscriptions.length) {
             const subscription = await create(this._stripe, 'subscriptions', {
                 customer: customer.id,
                 items: [{
@@ -196,6 +192,15 @@ module.exports = class StripePaymentProcessor {
             });
 
             await this._updateSubscription(subscription);
+        } else {
+            // NOTE: we should only ever have 1 active subscription, but just in case there is more update is done on all of them
+            for (const subscription of subscriptions) {
+                const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, {
+                    proration_behavior: 'none',
+                    plan: complimentaryPlan.id
+                });
+                await this._updateSubscription(updatedSubscription);
+            }
         }
     }
 
