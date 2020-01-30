@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const csvParser = require('csv-parser');
 const _ = require('lodash');
 const fs = require('fs-extra');
-const {formatCSV} = require('./');
+const {formatCSV} = require('.');
 
 const normalizeCSVFileToJSON = async (options) => {
     const columnsToExtract = options.columnsToExtract || [];

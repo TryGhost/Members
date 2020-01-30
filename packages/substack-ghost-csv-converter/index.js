@@ -1,8 +1,8 @@
-const {normalizeMembersCSV} = require('./lib');
+const {converter} = require('./lib');
 
 const convertCSV = async (originFilePath, destinationFilePath) => {
-    await normalizeMembersCSV({
-        origin: originFilePath,
+    await converter.normalizeMembersCSV({
+        path: originFilePath,
         destination: destinationFilePath,
         columnsToMap: [{
             from: 'email_disabled',

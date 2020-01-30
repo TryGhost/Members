@@ -3,7 +3,7 @@ module.exports = {
         return require('./format-csv');
     },
 
-    get normalizeMembersCSV() {
-        return require('./normalize-members-csv');
+    get converter() {
+        return require('./converter');
     }
 };
