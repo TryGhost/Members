@@ -1,12 +1,12 @@
 const path = require('path');
-const {normalizeMembersCSV} = require('../../lib');
+const {converter} = require('../../lib');
 // Switch these lines once there are useful utils
 // const testUtils = require('./utils');
 require('../utils');
 
 describe('Converts Substack CSV to Ghost CSV formats', function () {
     it('Reads CSV and converts it to normalized JSON', async function () {
-        const result = await normalizeMembersCSV.normalizeCSVFileToJSON({
+        const result = await converter.normalizeCSVFileToJSON({
             path: path.resolve('./test/fixtures/substack-csv-format.csv'),
             columnsToMap: [{
                 from: 'email_disabled',
@@ -39,5 +39,7 @@ describe('Converts Substack CSV to Ghost CSV formats', function () {
 
         result.length.should.equal(2);
         Object.keys(result[0]).should.deepEqual(['email', 'subscribed', 'stripe_customer_id']);
+        result[0].should.deepEqual({email: 'member+substack_1@example.com', subscribed: true, stripe_customer_id: 'cus_GbbIQRd8TnFqHq'});
+        result[1].should.deepEqual({email: 'member+substack_2@example.com', subscribed: false, stripe_customer_id: undefined});
     });
 });

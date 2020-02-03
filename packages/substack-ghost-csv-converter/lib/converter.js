@@ -57,7 +57,7 @@ const normalizeCSVFileToJSON = async (options) => {
                             const mapping = columnsToMap.find(column => (column.to === key));
 
                             if (mapping && mapping.negate) {
-                                result[key] = !(row[value]);
+                                result[key] = !(String(row[value]).toLowerCase() === 'true');
                             } else {
                                 result[key] = row[value];
                             }
