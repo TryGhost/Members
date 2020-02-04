@@ -7,7 +7,7 @@ require('../utils');
 describe('Converts Substack CSV to Ghost CSV formats', function () {
     it('Reads CSV and converts it to normalized JSON', async function () {
         const result = await converter.normalizeCSVFileToJSON({
-            path: path.resolve('packages/substack-ghost-csv-converter/test/fixtures/substack-csv-format.csv'),
+            path: path.resolve('./test/fixtures/substack-csv-format.csv'),
             columnsToMap: [{
                 from: 'email_disabled',
                 to: 'subscribed_to_emails',
