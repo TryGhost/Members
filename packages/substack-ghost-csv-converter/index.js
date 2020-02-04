@@ -6,7 +6,7 @@ const convertCSV = async (originFilePath, destinationFilePath) => {
         destination: destinationFilePath,
         columnsToMap: [{
             from: 'email_disabled',
-            to: 'subscribed',
+            to: 'subscribed_to_emails',
             negate: true
         }, {
             from: 'stripe_connected_customer_id',
@@ -14,7 +14,7 @@ const convertCSV = async (originFilePath, destinationFilePath) => {
         }],
         columnsToExtract: [{
             name: 'email',
-            lookup: /email/i
+            lookup: /^email/i
         }, {
             name: 'name',
             lookup: /name/i
@@ -22,8 +22,8 @@ const convertCSV = async (originFilePath, destinationFilePath) => {
             name: 'note',
             lookup: /note/i
         }, {
-            name: 'subscribed',
-            lookup: /subscribed/i
+            name: 'subscribed_to_emails',
+            lookup: /subscribed_to_emails/i
         }, {
             name: 'stripe_customer_id',
             lookup: /stripe_customer_id/i

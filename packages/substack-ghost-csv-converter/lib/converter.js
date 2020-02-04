@@ -74,7 +74,7 @@ const normalizeCSVFileToJSON = async (options) => {
 const normalizeMembersCSV = async (options) => {
     const results = await normalizeCSVFileToJSON(options);
 
-    let fields = ['email', 'name', 'note', 'subscribed', 'stripe_customer_id'];
+    let fields = ['email', 'name', 'note', 'subscribed_to_emails', 'stripe_customer_id'];
 
     if (results && results.length) {
         fields = Object.keys(results[0]);

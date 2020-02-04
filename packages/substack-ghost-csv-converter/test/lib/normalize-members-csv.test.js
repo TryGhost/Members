@@ -7,10 +7,10 @@ require('../utils');
 describe('Converts Substack CSV to Ghost CSV formats', function () {
     it('Reads CSV and converts it to normalized JSON', async function () {
         const result = await converter.normalizeCSVFileToJSON({
-            path: path.resolve('./test/fixtures/substack-csv-format.csv'),
+            path: path.resolve('packages/substack-ghost-csv-converter/test/fixtures/substack-csv-format.csv'),
             columnsToMap: [{
                 from: 'email_disabled',
-                to: 'subscribed',
+                to: 'subscribed_to_emails',
                 negate: true
             }, {
                 from: 'stripe_connected_customer_id',
@@ -18,7 +18,7 @@ describe('Converts Substack CSV to Ghost CSV formats', function () {
             }],
             columnsToExtract: [{
                 name: 'email',
-                lookup: /email/i
+                lookup: /^email/i
             }, {
                 name: 'name',
                 lookup: /name/i
@@ -26,8 +26,8 @@ describe('Converts Substack CSV to Ghost CSV formats', function () {
                 name: 'note',
                 lookup: /note/i
             }, {
-                name: 'subscribed',
-                lookup: /subscribed/i
+                name: 'subscribed_to_emails',
+                lookup: /subscribed_to_emails/i
             }, {
                 name: 'stripe_customer_id',
                 lookup: /stripe_customer_id/i
@@ -38,8 +38,8 @@ describe('Converts Substack CSV to Ghost CSV formats', function () {
         });
 
         result.length.should.equal(2);
-        Object.keys(result[0]).should.deepEqual(['email', 'subscribed', 'stripe_customer_id']);
-        result[0].should.deepEqual({email: 'member+substack_1@example.com', subscribed: true, stripe_customer_id: 'cus_GbbIQRd8TnFqHq'});
-        result[1].should.deepEqual({email: 'member+substack_2@example.com', subscribed: false, stripe_customer_id: undefined});
+        Object.keys(result[0]).should.deepEqual(['email', 'subscribed_to_emails', 'stripe_customer_id']);
+        result[0].should.deepEqual({email: 'member+substack_1@example.com', subscribed_to_emails: true, stripe_customer_id: 'cus_GbbIQRd8TnFqHq'});
+        result[1].should.deepEqual({email: 'member+substack_2@example.com', subscribed_to_emails: false, stripe_customer_id: undefined});
     });
 });
