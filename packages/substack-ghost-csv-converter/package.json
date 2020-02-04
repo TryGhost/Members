@@ -11,9 +11,13 @@
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
+  "bin": {
+    "subghost": "./bin/index.js"
+  },
   "files": [
     "index.js",
-    "lib"
+    "lib",
+    "bin"
   ],
   "publishConfig": {
     "access": "public"
