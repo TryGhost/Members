@@ -6,7 +6,7 @@ const converter = require('../');
 
 prettyCLI
     .configure({
-        name: 'Substack2Ghost'
+        name: 'subghost'
     })
     .positional('<source>', {
         paramsDesc: 'Substack CSV file path',
@@ -23,7 +23,7 @@ prettyCLI
         ui.log(`Converting Substack CSV file...`);
 
         return converter(argv.source, dest).then(() => {
-            ui.log(`Conversion finished. File writtent to: ${chalk.cyan(dest)}`);
+            ui.log(`Conversion finished. File written to: ${chalk.cyan(dest)}`);
 
             process.exit(0);
         }).catch((e) => {
