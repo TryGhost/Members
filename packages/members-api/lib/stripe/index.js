@@ -275,20 +275,23 @@ module.exports = class StripePaymentProcessor {
         const customerId = setupIntent.metadata.customer_id;
         const paymentMethod = setupIntent.payment_method;
 
+        // NOTE: has to attach payment method before being able to use it as default in the future
         await this._stripe.paymentMethods.attach(paymentMethod, {
             customer: customerId
         });
 
-        const customer = await this.getCustomer(customerId, {
-            expand: ['subscriptions.data.default_payment_method']
-        });
-
+        const customer = await this.getCustomer(customerId);
         await this._updateCustomer(member, customer);
+
         if (!customer.subscriptions || !customer.subscriptions.data) {
             return;
         }
+
         for (const subscription of customer.subscriptions.data) {
-            await this._updateSubscription(subscription);
+            const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, {
+                default_payment_method: paymentMethod
+            });
+            await this._updateSubscription(updatedSubscription);
         }
     }
 
