@@ -275,11 +275,6 @@ module.exports = class StripePaymentProcessor {
         await this._stripe.paymentMethods.attach(paymentMethod, {
             customer: customerId
         });
-        // await update(this._stripe, 'customers', customerId, {
-        //     invoice_settings: {
-        //         default_payment_method: paymentMethod
-        //     }
-        // });
 
         const customer = await this.getCustomer(customerId);
         await this._updateCustomer(member, customer);
