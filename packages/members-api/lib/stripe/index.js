@@ -138,11 +138,7 @@ module.exports = class StripePaymentProcessor {
     }
 
     async createCheckoutSetupSession(member, options) {
-        // TODO: cleanup if works (code copied from below)
-        let customer;
-
-        // TODO: handle client side if customer doesn't exist
-        customer = await this._customerForMemberCheckoutSession(member);
+        const customer = await this._customerForMemberCheckoutSession(member);
 
         const session = await this._stripe.checkout.sessions.create({
             mode: 'setup',
@@ -279,6 +275,11 @@ module.exports = class StripePaymentProcessor {
         await this._stripe.paymentMethods.attach(paymentMethod, {
             customer: customerId
         });
+        // await update(this._stripe, 'customers', customerId, {
+        //     invoice_settings: {
+        //         default_payment_method: paymentMethod
+        //     }
+        // });
 
         const customer = await this.getCustomer(customerId);
         await this._updateCustomer(member, customer);
