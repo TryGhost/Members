@@ -83,12 +83,18 @@ function MagicLink(options) {
  *
  * @param {object} options
  * @param {string} options.email - The email to send magic link to
+ * @param {string} options.labels - The labels for member
  * @param {object} options.subject - The subject to associate with the magic link (user id, or email)
  * @param {string=} [options.type='signin'] - The type to be passed to the url and content generator functions
  * @returns {Promise<{token: JSONWebToken, info: SentMessageInfo}>}
  */
 MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
-    const token = jwt.sign({}, this.secret, {
+    const labels = options.labels;
+    const payload = {};
+    if (labels) {
+        payload.labels = labels;
+    }
+    const token = jwt.sign(payload, this.secret, {
         algorithm: 'HS256',
         subject: options.subject,
         expiresIn: '10m'
@@ -140,4 +146,19 @@ MagicLink.prototype.getUserFromToken = function getUserFromToken(token) {
         maxAge: '10m'
     });
     return claims.sub;
+};
+
+/**
+ * getLabelsFromToken
+ *
+ * @param {JSONWebToken} token - The token to decode
+ * @returns {object} labels - The labels object associated with the magic link
+ */
+MagicLink.prototype.getLabelsFromToken = function getLabelsFromToken(token) {
+    /** @type {object} */
+    const claims = jwt.verify(token, this.secret, {
+        algorithms: ['HS256'],
+        maxAge: '10m'
+    });
+    return claims.labels;
 };

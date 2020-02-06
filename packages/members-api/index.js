@@ -72,16 +72,16 @@ module.exports = function MembersApi({
         getSubject
     });
 
-    async function sendEmailWithMagicLink(email, requestedType, options = {forceEmailType: false}){
+    async function sendEmailWithMagicLink({email, requestedType, labels, options = {forceEmailType: false}}){
         if (options.forceEmailType) {
-            return magicLinkService.sendMagicLink({email, subject: email, type: requestedType});
+            return magicLinkService.sendMagicLink({email, labels, subject: email, type: requestedType});
         }
         const member = await users.get({email});
         if (member) {
-            return magicLinkService.sendMagicLink({email, subject: email, type: 'signin'});
+            return magicLinkService.sendMagicLink({email, labels, subject: email, type: 'signin'});
         } else {
             const type = requestedType === 'subscribe' ? 'subscribe' : 'signup';
-            return magicLinkService.sendMagicLink({email, subject: email, type});
+            return magicLinkService.sendMagicLink({email, labels, subject: email, type});
         }
     }
 
@@ -99,11 +99,21 @@ module.exports = function MembersApi({
         if (!email) {
             return null;
         }
+        /** Since we pass labels as comma-seperated string in token, it needs proper formatting for member creation*/
+        let labels = await magicLinkService.getLabelsFromToken(token) || [];
+        if (_.isString(labels)) {
+            labels = labels.split(',').map((label) => {
+                return {
+                    name: label
+                };
+            });
+        }
+
         const member = await getMemberIdentityData(email);
         if (member) {
             return member;
         }
-        await users.create({email});
+        await users.create({email, labels});
         return getMemberIdentityData(email);
     }
     async function getMemberIdentityData(email){
@@ -131,14 +141,15 @@ module.exports = function MembersApi({
             return res.end('Bad Request.');
         }
         const emailType = req.body.emailType;
+        const labels = req.body.labels;
         try {
             if (!allowSelfSignup) {
                 const member = await users.get({email});
                 if (member) {
-                    await sendEmailWithMagicLink(email, emailType);
+                    await sendEmailWithMagicLink({email, requestedType: emailType});
                 }
             } else {
-                await sendEmailWithMagicLink(email, emailType);
+                await sendEmailWithMagicLink({email, requestedType: emailType, labels});
             }
             res.writeHead(201);
             return res.end('Created.');
@@ -238,7 +249,7 @@ module.exports = function MembersApi({
                 }
 
                 const emailType = 'signup';
-                await sendEmailWithMagicLink(customer.email, emailType, {forceEmailType: true});
+                await sendEmailWithMagicLink({email: customer.email, requestedType: emailType, options: {forceEmailType: true}});
             }
 
             res.writeHead(200);

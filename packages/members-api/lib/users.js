@@ -3,11 +3,12 @@ const common = require('./common');
 
 let Member;
 
-async function createMember({email, name, note}) {
+async function createMember({email, name, note, labels}) {
     const model = await Member.add({
         email,
         name,
-        note
+        note,
+        labels
     });
     const member = model.toJSON();
     return member;
