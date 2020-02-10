@@ -301,7 +301,7 @@ module.exports = class StripePaymentProcessor {
             default_payment_card_last4: payment && payment.card && payment.card.last4 || null,
 
             plan_id: subscription.plan.id,
-            plan_nickname: subscription.plan.nickname,
+            plan_nickname: subscription.plan.nickname || '', // NOTE: defaulting to empty string here as migration to nullable field turned to be too much bigger problem
             plan_interval: subscription.plan.interval,
             plan_amount: subscription.plan.amount,
             plan_currency: subscription.plan.currency
