@@ -107,6 +107,14 @@
   resolved "https://registry.yarnpkg.com/@sinonjs/text-encoding/-/text-encoding-0.7.1.tgz#8da5c6530915653f3a1f38fd5f101d8c3f8079c5"
   integrity sha512-+iTbntw2IZPb/anVDbypzfQa+ay64MW0Zo8aJ8gZPWMMK6/OubMVb6lUPMagqjOPnmtauXnFCACVl3O7ogjeqQ==
 
+"@tryghost/pretty-cli@1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.2.2.tgz#bebc31cabdba3a60c0848b9fdb39f1f4846b4017"
+  integrity sha512-3GK42+Ju7blugavxmGZoNBhkKXtd4NNcXGE9FZ99+tXLiFs+Y5psVLm9dK3DJB6lgt2Keo0GbpJxsh57ivLG2w==
+  dependencies:
+    chalk "^2.4.1"
+    sywac "^1.2.1"
+
 "@types/body-parser@*":
   version "1.17.1"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.17.1.tgz#18fcf61768fb5c30ccc508c21d6fd2e8b3bf7897"
@@ -497,7 +505,7 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.2:
+chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.1, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
   integrity sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==
@@ -2892,6 +2900,11 @@ symbol-tree@^3.2.2:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/symbol-tree/-/symbol-tree-3.2.4.tgz#430637d248ba77e078883951fb9aa0eed7c63fa2"
   integrity sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==
+
+sywac@^1.2.1:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/sywac/-/sywac-1.2.2.tgz#8d9e7271fc11337de09a38e70b71a264cb74caf0"
+  integrity sha512-Bfyo0Oddco9b/ifXTevNmMCewmWH2EeE06cPKolsahly7nShbYooZmJYZxJc5EN4WFAXvbR8WOx97PUvaYYMEg==
 
 table@^5.2.3:
   version "5.4.6"
