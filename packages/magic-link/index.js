@@ -90,7 +90,7 @@ function MagicLink(options) {
  */
 MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
     const payload = options.payload || {};
-    const token = jwt.sign({payload}, this.secret, {
+    const token = jwt.sign(payload, this.secret, {
         algorithm: 'HS256',
         subject: options.subject,
         expiresIn: '10m'
@@ -156,5 +156,5 @@ MagicLink.prototype.getPayloadFromToken = function getPayloadFromToken(token) {
         algorithms: ['HS256'],
         maxAge: '10m'
     });
-    return claims.payload || {};
+    return claims || {};
 };
