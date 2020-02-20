@@ -27,6 +27,8 @@ module.exports = class StripePaymentProcessor {
         this._public_token = config.publicKey;
         this._checkoutSuccessUrl = config.checkoutSuccessUrl;
         this._checkoutCancelUrl = config.checkoutCancelUrl;
+        this._billingSuccessUrl = config.billingSuccessUrl;
+        this._billingCancelUrl = config.billingCancelUrl;
         this._webhookHandlerUrl = config.webhookHandlerUrl;
 
         try {
@@ -143,8 +145,8 @@ module.exports = class StripePaymentProcessor {
         const session = await this._stripe.checkout.sessions.create({
             mode: 'setup',
             payment_method_types: ['card'],
-            success_url: options.successUrl || this._checkoutSuccessUrl,
-            cancel_url: options.cancelUrl || this._checkoutCancelUrl,
+            success_url: options.successUrl || this._billingSuccessUrl,
+            cancel_url: options.cancelUrl || this._billingCancelUrl,
             setup_intent_data: {
                 metadata: {
                     customer_id: customer.id
