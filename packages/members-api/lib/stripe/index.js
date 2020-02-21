@@ -147,6 +147,7 @@ module.exports = class StripePaymentProcessor {
             payment_method_types: ['card'],
             success_url: options.successUrl || this._billingSuccessUrl,
             cancel_url: options.cancelUrl || this._billingCancelUrl,
+            customer_email: member.email,
             setup_intent_data: {
                 metadata: {
                     customer_id: customer.id
