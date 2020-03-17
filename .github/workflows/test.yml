@@ -4,13 +4,12 @@ on:
   push:
     branches:
       - master
-
 jobs:
   build:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node: [ '10', '12' ]
+        node: [ 10, 12 ]
     name: Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -18,5 +17,5 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: yarn global add lerna
-      - run: yarn install
+      - run: yarn
       - run: yarn test
