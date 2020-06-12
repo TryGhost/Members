@@ -249,26 +249,22 @@ module.exports = class StripePaymentProcessor {
     async setComplimentarySubscription(member) {
         const subscriptions = await this.getActiveSubscriptions(member);
 
-        // NOTE: Because we allow for multiple Complimentary plans, need to take into account currently availalbe
-        //       plan currencies so that we don't end up giving a member complimentary subscription in wrong currency.
-        //       Giving member a subscription in different currency would prevent them from resubscribing with a regular
-        //       plan if Complimentary is cancelled (ref. https://stripe.com/docs/billing/customer#currency)
-        let complimentaryCurrency = this._plans.find(plan => plan.interval === 'month').currency.toLowerCase();
-
-        if (subscriptions.length) {
-            complimentaryCurrency = subscriptions[0].plan.currency.toLowerCase();
-        }
-
-        const complimentaryFilter = plan => (plan.nickname === 'Complimentary' && plan.currency === complimentaryCurrency);
-        const complimentaryPlan = this._plans.find(complimentaryFilter);
-
-        const customer = await this._customerForMemberCheckoutSession(member);
-
         if (!subscriptions.length) {
+            const customer = await this._customerForMemberCheckoutSession(member);
             const subscription = await create(this._stripe, 'subscriptions', {
+                metadata: {
+                    complimentary: true
+                },
                 customer: customer.id,
                 items: [{
-                    plan: complimentaryPlan.id
+                    price_data: {
+                        unit_amount: 0,
+                        currency: 'usd',
+                        product: this._product.id,
+                        recurring: {
+                            interval: 'year'
+                        }
+                    }
                 }]
             });
 
@@ -276,11 +272,27 @@ module.exports = class StripePaymentProcessor {
         } else {
             // NOTE: we should only ever have 1 active subscription, but just in case there is more update is done on all of them
             for (const subscription of subscriptions) {
+                const stripeSubscription = await retrieve(this._stripe, 'subscriptions', subscription.id);
                 const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, {
+                    metadata: {
+                        complimentary: true
+                    },
                     proration_behavior: 'none',
-                    plan: complimentaryPlan.id
+                    items: stripeSubscription.items.data.map((item) => {
+                        return {
+                            id: item.id,
+                            price_data: {
+                                unit_amount: 0,
+                                currency: item.price.currency,
+                                product: item.price.product,
+                                recurring: {
+                                    interval: item.price.recurring.interval,
+                                    interval_count: item.price.recurring.interval_count
+                                }
+                            }
+                        };
+                    })
                 });
-
                 await this._updateSubscription(updatedSubscription);
             }
         }
@@ -391,7 +403,7 @@ module.exports = class StripePaymentProcessor {
             plan_id: subscription.plan.id,
             // NOTE: Defaulting to interval as migration to nullable field turned out to be much bigger problem.
             //       Ideally, would need nickname field to be nullable on the DB level - condition can be simplified once this is done
-            plan_nickname: subscription.plan.nickname || subscription.plan.interval,
+            plan_nickname: subscription.plan.nickname || (subscription.metadata && subscription.metadata.complimentary ? 'Complimentary' : subscription.plan.interval),
             plan_interval: subscription.plan.interval,
             plan_amount: subscription.plan.amount,
             plan_currency: subscription.plan.currency
