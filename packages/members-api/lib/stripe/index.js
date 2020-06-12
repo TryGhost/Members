@@ -1,3 +1,4 @@
+const Stripe = require('stripe').default;
 const debug = require('ghost-ignition').debug('stripe');
 const _ = require('lodash');
 const {retrieve, list, create, update, del} = require('./api/stripeRequests');
@@ -30,9 +31,10 @@ module.exports = class StripePaymentProcessor {
     }
 
     async _configure(config) {
-        this._stripe = require('stripe')(config.secretKey);
-        this._stripe.setAppInfo(config.appInfo);
-        this._stripe.setApiVersion(STRIPE_API_VERSION);
+        this._stripe = new Stripe(config.secretKey, {
+            apiVersion: '2020-03-02',
+            appInfo: config.appInfo
+        });
         this._stripe.__TEST_MODE__ = config.secretKey.startsWith('sk_test_');
         this._public_token = config.publicKey;
         this._checkoutSuccessUrl = config.checkoutSuccessUrl;

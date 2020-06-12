@@ -21,7 +21,8 @@
     "mocha": "6.2.2",
     "nock": "12.0.3",
     "should": "13.2.3",
-    "sinon": "7.5.0"
+    "sinon": "7.5.0",
+    "typescript": "^3.9.5"
   },
   "dependencies": {
     "@tryghost/magic-link": "^0.4.9",
