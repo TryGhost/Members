@@ -248,26 +248,19 @@ module.exports = class StripePaymentProcessor {
     async setComplimentarySubscription(member) {
         const subscriptions = await this.getActiveSubscriptions(member);
 
-        // NOTE: Because we allow for multiple Complimentary plans, need to take into account currently availalbe
-        //       plan currencies so that we don't end up giving a member complimentary subscription in wrong currency.
-        //       Giving member a subscription in different currency would prevent them from resubscribing with a regular
-        //       plan if Complimentary is cancelled (ref. https://stripe.com/docs/billing/customer#currency)
-        let complimentaryCurrency = this._plans.find(plan => plan.interval === 'month').currency.toLowerCase();
-
-        if (subscriptions.length) {
-            complimentaryCurrency = subscriptions[0].plan.currency.toLowerCase();
-        }
-
-        const complimentaryFilter = plan => (plan.nickname === 'Complimentary' && plan.currency === complimentaryCurrency);
-        const complimentaryPlan = this._plans.find(complimentaryFilter);
-
-        const customer = await this._customerForMemberCheckoutSession(member);
-
         if (!subscriptions.length) {
+            const customer = await this._customerForMemberCheckoutSession(member);
             const subscription = await create(this._stripe, 'subscriptions', {
                 customer: customer.id,
                 items: [{
-                    plan: complimentaryPlan.id
+                    price_data: {
+                        unit_amount: 0,
+                        currency: 'usd',
+                        product: this._product.id,
+                        recurring: {
+                            interval: 'year'
+                        }
+                    }
                 }]
             });
 
@@ -277,9 +270,17 @@ module.exports = class StripePaymentProcessor {
             for (const subscription of subscriptions) {
                 const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, {
                     proration_behavior: 'none',
-                    plan: complimentaryPlan.id
+                    items: [{
+                        price_data: {
+                            unit_amount: 0,
+                            currency: subscription.plan.currency,
+                            product: this._product.id,
+                            recurring: {
+                                interval: 'year'
+                            }
+                        }
+                    }]
                 });
-
                 await this._updateSubscription(updatedSubscription);
             }
         }
