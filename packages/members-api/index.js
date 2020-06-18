@@ -44,7 +44,19 @@ module.exports = function MembersApi({
             status: 'active'
         });
 
-        return !!firstActiveSubscription;
+        if (firstActiveSubscription) {
+            return true;
+        }
+
+        const firstTrialingSubscription = await stripeCustomerSubscriptionModel.findOne({
+            status: 'trialing'
+        });
+
+        if (firstTrialingSubscription) {
+            return true;
+        }
+
+        return false;
     }
 
     const stripeStorage = {
