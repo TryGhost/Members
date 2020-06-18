@@ -39,6 +39,14 @@ module.exports = function MembersApi({
     const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
     const metadata = Metadata({memberStripeCustomerModel, stripeCustomerSubscriptionModel});
 
+    async function hasActiveStripeSubscriptions() {
+        const firstActiveSubscription = await stripeCustomerSubscriptionModel.findOne({
+            status: 'active'
+        });
+
+        return !!firstActiveSubscription;
+    }
+
     const stripeStorage = {
         async get(member) {
             return metadata.getMetadata('stripe', member);
@@ -450,6 +458,7 @@ module.exports = function MembersApi({
         bus,
         sendEmailWithMagicLink,
         getMagicLink,
+        hasActiveStripeSubscriptions,
         members: users
     };
 };
