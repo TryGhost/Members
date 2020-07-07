@@ -93,7 +93,7 @@ MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
     const token = jwt.sign(payload, this.secret, {
         algorithm: 'HS256',
         subject: options.subject,
-        expiresIn: '10m'
+        expiresIn: '1d'
     });
 
     const type = options.type || 'signin';
@@ -121,7 +121,7 @@ MagicLink.prototype.getMagicLink = function getMagicLink(options) {
     const token = jwt.sign({}, this.secret, {
         algorithm: 'HS256',
         subject: options.subject,
-        expiresIn: '10m'
+        expiresIn: '1d'
     });
 
     const type = options.type || 'signin';
@@ -139,7 +139,7 @@ MagicLink.prototype.getUserFromToken = function getUserFromToken(token) {
     /** @type {object} */
     const claims = jwt.verify(token, this.secret, {
         algorithms: ['HS256'],
-        maxAge: '10m'
+        maxAge: '1d'
     });
     return claims.sub;
 };
@@ -154,7 +154,7 @@ MagicLink.prototype.getPayloadFromToken = function getPayloadFromToken(token) {
     /** @type {object} */
     const claims = jwt.verify(token, this.secret, {
         algorithms: ['HS256'],
-        maxAge: '10m'
+        maxAge: '1d'
     });
     return claims || {};
 };
