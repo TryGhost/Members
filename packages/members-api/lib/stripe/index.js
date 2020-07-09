@@ -43,13 +43,28 @@ module.exports = class StripePaymentProcessor {
 
         try {
             this._product = await api.products.ensure(this._stripe, config.product);
+        } catch (err) {
+            this.logging.error('There was an error creating the Stripe Product');
+            this.logging.error(err);
+            return this._rejectReady(err);
+        }
 
-            this._plans = [];
-            for (const planSpec of config.plans) {
+        /**
+         * @type Array<import('stripe').plans.IPlan>
+         */
+        this._plans = [];
+        for (const planSpec of config.plans) {
+            try {
                 const plan = await api.plans.ensure(this._stripe, planSpec, this._product);
                 this._plans.push(plan);
+            } catch (err) {
+                this.logging.error('There was an error creating the Stripe Plan');
+                this.logging.error(err);
+                return this._rejectReady(err);
             }
+        }
 
+        try {
             const webhooks = await list(this._stripe, 'webhookEndpoints', {
                 limit: 100
             });
