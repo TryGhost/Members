@@ -27,9 +27,11 @@ module.exports = function MembersApi({
         getHTML,
         getSubject
     },
-    memberStripeCustomerModel,
-    stripeCustomerSubscriptionModel,
-    memberModel,
+    models: {
+        StripeCustomer,
+        StripeCustomerSubscription,
+        Member
+    },
     logger
 }) {
     if (logger) {
@@ -37,10 +39,13 @@ module.exports = function MembersApi({
     }
 
     const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
-    const metadata = Metadata({memberStripeCustomerModel, stripeCustomerSubscriptionModel});
+    const metadata = Metadata({
+        StripeCustomer,
+        StripeCustomerSubscription
+    });
 
     async function hasActiveStripeSubscriptions() {
-        const firstActiveSubscription = await stripeCustomerSubscriptionModel.findOne({
+        const firstActiveSubscription = await StripeCustomerSubscription.findOne({
             status: 'active'
         });
 
@@ -48,7 +53,7 @@ module.exports = function MembersApi({
             return true;
         }
 
-        const firstTrialingSubscription = await stripeCustomerSubscriptionModel.findOne({
+        const firstTrialingSubscription = await StripeCustomerSubscription.findOne({
             status: 'trialing'
         });
 
@@ -111,7 +116,7 @@ module.exports = function MembersApi({
 
     const users = Users({
         stripe,
-        memberModel
+        Member
     });
 
     async function getMemberDataFromMagicLinkToken(token) {
