@@ -28,6 +28,7 @@ module.exports = function MembersApi({
         getSubject
     },
     models: {
+        StripeWebhook,
         StripeCustomer,
         StripeCustomerSubscription,
         Member
@@ -40,6 +41,7 @@ module.exports = function MembersApi({
 
     const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
     const metadata = Metadata({
+        StripeWebhook,
         StripeCustomer,
         StripeCustomerSubscription
     });
