@@ -97,7 +97,7 @@ module.exports = function MembersApi({
         getSubject
     });
 
-    async function sendEmailWithMagicLink({email, requestedType, payload, options = {forceEmailType: false}}){
+    async function sendEmailWithMagicLink({email, requestedType, payload, options = {forceEmailType: false}}) {
         if (options.forceEmailType) {
             return magicLinkService.sendMagicLink({email, payload, subject: email, type: requestedType});
         }
@@ -144,11 +144,11 @@ module.exports = function MembersApi({
         return getMemberIdentityData(email);
     }
 
-    async function getMemberIdentityData(email){
+    async function getMemberIdentityData(email) {
         return users.get({email});
     }
 
-    async function getMemberIdentityToken(email){
+    async function getMemberIdentityToken(email) {
         const member = await getMemberIdentityData(email);
         if (!member) {
             return null;
