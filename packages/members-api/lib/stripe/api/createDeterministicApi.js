@@ -42,7 +42,8 @@ function createCreator(resource, getAttrs) {
         return stripeCreate(
             stripe,
             resource,
-            Object.assign(getAttrs(object, ...rest), {id})
+            Object.assign(getAttrs(object, ...rest), {id}),
+            {idempotencyKey: id}
         );
     };
 }

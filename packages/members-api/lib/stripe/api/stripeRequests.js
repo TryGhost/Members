@@ -11,9 +11,9 @@ const list = createStripeRequest(function (stripe, resource, options) {
     return stripe[resource].list(options);
 });
 
-const create = createStripeRequest(function (stripe, resource, object) {
+const create = createStripeRequest(function (stripe, resource, object, options = {}) {
     debug(`create ${resource} ${JSON.stringify(object)}`);
-    return stripe[resource].create(object);
+    return stripe[resource].create(object, Object.assign({}, options, {timeout: 80000}));
 });
 
 const update = createStripeRequest(function (stripe, resource, id, object) {
