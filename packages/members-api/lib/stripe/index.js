@@ -195,7 +195,7 @@ module.exports = class StripePaymentProcessor {
         const plan = this._plans.find(plan => plan.nickname === planName);
         const customerEmail = (!customer && options.customerEmail) ? options.customerEmail : undefined;
         const metadata = options.metadata || undefined;
-        const session = await this._stripe.checkout.sessions.create({
+        const payload = {
             payment_method_types: ['card'],
             success_url: options.successUrl || this._checkoutSuccessUrl,
             cancel_url: options.cancelUrl || this._checkoutCancelUrl,
@@ -208,7 +208,9 @@ module.exports = class StripePaymentProcessor {
                     plan: plan.id
                 }]
             }
-        });
+        }
+        if(metadata && metadata.coupon) payload.subscription_data.coupon = metadata.coupon;
+        const session = await this._stripe.checkout.sessions.create(payload);
 
         return {
             sessionId: session.id,
