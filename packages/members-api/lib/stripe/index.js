@@ -208,8 +208,12 @@ module.exports = class StripePaymentProcessor {
                     plan: plan.id
                 }]
             }
+        };
+        
+        if (metadata && metadata.coupon) {
+            payload.subscription_data.coupon = metadata.coupon;
         }
-        if(metadata && metadata.coupon) payload.subscription_data.coupon = metadata.coupon;
+        
         const session = await this._stripe.checkout.sessions.create(payload);
 
         return {
