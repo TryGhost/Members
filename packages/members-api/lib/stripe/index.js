@@ -201,6 +201,7 @@ module.exports = class StripePaymentProcessor {
             cancel_url: options.cancelUrl || this._checkoutCancelUrl,
             customer: customer ? customer.id : undefined,
             customer_email: customerEmail,
+            allow_promotion_codes: true,
             metadata,
             subscription_data: {
                 trial_from_plan: true,
