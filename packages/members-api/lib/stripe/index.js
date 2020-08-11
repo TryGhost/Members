@@ -5,15 +5,6 @@ const api = require('./api');
 
 const STRIPE_API_VERSION = '2019-09-09';
 
-const CURRENCY_SYMBOLS = {
-    usd: '$',
-    aud: '$',
-    cad: '$',
-    gbp: '£',
-    eur: '€',
-    inr: '₹'
-};
-
 module.exports = class StripePaymentProcessor {
     constructor(config, storage, logging) {
         this.logging = logging;
