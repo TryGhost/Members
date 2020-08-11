@@ -70,6 +70,22 @@ module.exports = function ({
         };
     }
 
+    async function linkStripeCustomerById(customerId, memberId) {
+        if (!stripe) {
+            return;
+        }
+        const member = await get({id: memberId});
+        return stripe.linkStripeCustomer(customerId, member);
+    }
+
+    async function setComplimentarySubscriptionById(memberId) {
+        if (!stripe) {
+            return;
+        }
+        const member = await get({id: memberId});
+        return stripe.setComplimentarySubscription(member);
+    }
+
     return {
         create,
         update,
@@ -77,9 +93,11 @@ module.exports = function ({
         get,
         destroy,
         setComplimentarySubscription: safeStripe('setComplimentarySubscription'),
+        setComplimentarySubscriptionById,
         cancelComplimentarySubscription: safeStripe('cancelComplimentarySubscription'),
         cancelStripeSubscriptions: safeStripe('cancelComplimentarySubscription'),
         getStripeCustomer: safeStripe('getStripeCustomer'),
-        linkStripeCustomer: safeStripe('linkStripeCustomer')
+        linkStripeCustomer: safeStripe('linkStripeCustomer'),
+        linkStripeCustomerById
     };
 };
