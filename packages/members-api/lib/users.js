@@ -97,6 +97,8 @@ module.exports = function ({
         cancelComplimentarySubscription: safeStripe('cancelComplimentarySubscription'),
         cancelStripeSubscriptions: safeStripe('cancelComplimentarySubscription'),
         getStripeCustomer: safeStripe('getCustomer'),
+        createStripeCustomer: safeStripe('createCustomer'),
+        createComplimentarySubscription: safeStripe('createComplimentarySubscription'),
         linkStripeCustomer: safeStripe('linkStripeCustomer'),
         linkStripeCustomerById
     };
