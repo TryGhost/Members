@@ -464,7 +464,7 @@ module.exports = class StripePaymentProcessor {
         }
 
         debug(`Creating customer for member ${member.get('email')}`);
-        const customer = await create(this._stripe, 'customers', {
+        const customer = await this.createCustomer({
             email: member.get('email')
         });
 
@@ -475,6 +475,10 @@ module.exports = class StripePaymentProcessor {
 
     async getSetupIntent(id, options) {
         return retrieve(this._stripe, 'setupIntents', id, options);
+    }
+
+    async createCustomer(options) {
+        return create(this._stripe, 'customers', options);
     }
 
     async getCustomer(id, options) {
