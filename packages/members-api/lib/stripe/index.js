@@ -13,6 +13,10 @@ module.exports = class StripePaymentProcessor {
             this._resolveReady = resolve;
             this._rejectReady = reject;
         });
+        /**
+         * @type Array<import('stripe').plans.IPlan>
+         */
+        this._plans = [];
         this._configure(config);
     }
 
@@ -39,10 +43,6 @@ module.exports = class StripePaymentProcessor {
             return this._rejectReady(err);
         }
 
-        /**
-         * @type Array<import('stripe').plans.IPlan>
-         */
-        this._plans = [];
         for (const planSpec of config.plans) {
             try {
                 const plan = await api.plans.ensure(this._stripe, planSpec, this._product);
