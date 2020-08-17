@@ -290,6 +290,26 @@ module.exports = class StripePaymentProcessor {
         return metadata.subscriptions;
     }
 
+    async createComplimentarySubscription(customer) {
+        const monthlyPlan = this._plans.find(plan => plan.interval === 'month');
+        if (!monthlyPlan) {
+            throw new Error('Could not find monthly plan');
+        }
+        const complimentaryCurrency = monthlyPlan.currency.toLowerCase();
+        const complimentaryPlan = this._plans.find(plan => plan.nickname === 'Complimentary' && plan.currency === complimentaryCurrency);
+
+        if (!complimentaryPlan) {
+            throw new Error('Could not find complimentaryPlan');
+        }
+
+        return create(this._stripe, 'subscriptions', {
+            customer: customer.id,
+            items: [{
+                plan: complimentaryPlan.id
+            }]
+        });
+    }
+
     async setComplimentarySubscription(member) {
         const subscriptions = await this.getActiveSubscriptions(member);
 
