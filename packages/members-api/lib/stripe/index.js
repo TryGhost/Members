@@ -15,9 +15,10 @@ const CURRENCY_SYMBOLS = {
 };
 
 module.exports = class StripePaymentProcessor {
-    constructor(config, storage, logging) {
+    constructor(config, storage, logging, allowPromotionCodes = false) {
         this.logging = logging;
         this.storage = storage;
+        this.allowPromotionCodes = allowPromotionCodes;
         this._ready = new Promise((resolve, reject) => {
             this._resolveReady = resolve;
             this._rejectReady = reject;
@@ -201,7 +202,7 @@ module.exports = class StripePaymentProcessor {
             cancel_url: options.cancelUrl || this._checkoutCancelUrl,
             customer: customer ? customer.id : undefined,
             customer_email: customerEmail,
-            allow_promotion_codes: true,
+            allow_promotion_codes: this.allowPromotionCodes,
             metadata,
             subscription_data: {
                 trial_from_plan: true,
