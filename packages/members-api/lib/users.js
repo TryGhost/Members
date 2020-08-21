@@ -11,7 +11,7 @@ module.exports = function ({
         return Member.findOne(data, options);
     }
 
-    async function destroy(data, options) {
+    async function destroy(data, options = {}) {
         debug(`destroy id:${data.id} email:${data.email}`);
         const member = await Member.findOne(data, options);
         if (!member) {
