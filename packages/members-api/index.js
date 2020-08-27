@@ -75,7 +75,7 @@ module.exports = function MembersApi({
             return metadata.setMetadata('stripe', data);
         }
     };
-    const stripe = paymentConfig.stripe ? new StripePaymentProcessor(paymentConfig.stripe, stripeStorage, common.logging, paymentConfig.enableStripePromoCodes) : null;
+    const stripe = paymentConfig.stripe ? new StripePaymentProcessor(paymentConfig.stripe, stripeStorage, common.logging) : null;
 
     async function ensureStripe(_req, res, next) {
         if (!stripe) {
