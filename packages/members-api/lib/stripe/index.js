@@ -187,7 +187,7 @@ module.exports = class StripePaymentProcessor {
         const customerEmail = (!customer && options.customerEmail) ? options.customerEmail : undefined;
         const metadata = options.metadata || undefined;
         const session = await this._stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
+            payment_method_types: ['card', 'ideal', 'sepa_debit'],
             success_url: options.successUrl || this._checkoutSuccessUrl,
             cancel_url: options.cancelUrl || this._checkoutCancelUrl,
             customer: customer ? customer.id : undefined,
@@ -228,7 +228,7 @@ module.exports = class StripePaymentProcessor {
 
         const session = await this._stripe.checkout.sessions.create({
             mode: 'setup',
-            payment_method_types: ['card'],
+            payment_method_types: ['card', 'ideal', 'sepa_debit'],
             success_url: options.successUrl || this._billingSuccessUrl,
             cancel_url: options.cancelUrl || this._billingCancelUrl,
             customer_email: member.get('email'),
