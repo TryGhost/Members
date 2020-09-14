@@ -83,16 +83,13 @@ function MagicLink(options) {
  *
  * @param {object} options
  * @param {string} options.email - The email to send magic link to
- * @param {string} options.payload - The payload for token
- * @param {object} options.subject - The subject to associate with the magic link (user id, or email)
+ * @param {object} options.tokenData - The data for token
  * @param {string=} [options.type='signin'] - The type to be passed to the url and content generator functions
  * @returns {Promise<{token: JSONWebToken, info: SentMessageInfo}>}
  */
 MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
-    const payload = options.payload || {};
-    const token = jwt.sign(payload, this.secret, {
+    const token = jwt.sign(options.tokenData, this.secret, {
         algorithm: 'HS256',
-        subject: options.subject,
         expiresIn: '10m'
     });
 
@@ -109,18 +106,18 @@ MagicLink.prototype.sendMagicLink = async function sendMagicLink(options) {
 
     return {token, info};
 };
+
 /**
  * getMagicLink
  *
  * @param {object} options
- * @param {object} options.subject - The subject to associate with the magic link (user id, or email)
+ * @param {object} options.tokenData - The data for token
  * @param {string=} [options.type='signin'] - The type to be passed to the url and content generator functions
- * @returns {string} - signin URL
+ * @returns {URL} - signin URL
  */
 MagicLink.prototype.getMagicLink = function getMagicLink(options) {
-    const token = jwt.sign({}, this.secret, {
+    const token = jwt.sign(options.tokenData, this.secret, {
         algorithm: 'HS256',
-        subject: options.subject,
         expiresIn: '10m'
     });
 
@@ -130,31 +127,16 @@ MagicLink.prototype.getMagicLink = function getMagicLink(options) {
 };
 
 /**
- * getUserFromToken
+ * getDataFromToken
  *
  * @param {JSONWebToken} token - The token to decode
- * @returns {object} user - The user object associated with the magic link
+ * @returns {object} data - The data object associated with the magic link
  */
-MagicLink.prototype.getUserFromToken = function getUserFromToken(token) {
+MagicLink.prototype.getDataFromToken = function getDataFromToken(token) {
     /** @type {object} */
-    const claims = jwt.verify(token, this.secret, {
+    const tokenData = (jwt.verify(token, this.secret, {
         algorithms: ['HS256'],
         maxAge: '10m'
-    });
-    return claims.sub;
-};
-
-/**
- * getPayloadFromToken
- *
- * @param {JSONWebToken} token - The token to decode
- * @returns {object} payload - The payload object associated with the magic link
- */
-MagicLink.prototype.getPayloadFromToken = function getPayloadFromToken(token) {
-    /** @type {object} */
-    const claims = jwt.verify(token, this.secret, {
-        algorithms: ['HS256'],
-        maxAge: '10m'
-    });
-    return claims || {};
+    }));
+    return tokenData;
 };
