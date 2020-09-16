@@ -169,7 +169,9 @@ module.exports = function MembersApi({
             }));
         }
 
-        const member = await getMemberIdentityData(email);
+        const member = await users.get(email, {
+            withRelated: ['labels']
+        });
 
         if (!member) {
             return Promise.reject(new common.errors.NotFoundError({
