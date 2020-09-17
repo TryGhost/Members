@@ -75,7 +75,7 @@ describe('MagicLink', function () {
             };
 
             const {token} = await service.sendMagicLink(args);
-            const data = service.getDataFromToken(token);
+            const data = await service.getDataFromToken(token);
 
             should.deepEqual(data.id, args.tokenData.id);
         });

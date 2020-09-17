@@ -65,9 +65,9 @@ class MagicLink {
      * @param {object} options
      * @param {object} options.tokenData - The data for token
      * @param {string=} [options.type='signin'] - The type to be passed to the url and content generator functions
-     * @returns {URL} - signin URL
+     * @returns {Promise<URL>} - signin URL
      */
-    getMagicLink(options) {
+    async getMagicLink(options) {
         const token = jwt.sign(options.tokenData, this.secret, {
             algorithm: 'HS256',
             expiresIn: '10m'
@@ -82,9 +82,9 @@ class MagicLink {
      * getDataFromToken
      *
      * @param {JSONWebToken} token - The token to decode
-     * @returns {object} data - The data object associated with the magic link
+     * @returns {Promise<object>} data - The data object associated with the magic link
      */
-    getDataFromToken(token) {
+    async getDataFromToken(token) {
         /** @type {object} */
         const tokenData = (jwt.verify(token, this.secret, {
             algorithms: ['HS256'],
