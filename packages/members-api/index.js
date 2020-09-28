@@ -169,7 +169,7 @@ module.exports = function MembersApi({
             });
         }
 
-        const member = await users.get(email, {
+        const member = await users.get({email}, {
             withRelated: ['labels']
         });
 
@@ -182,8 +182,8 @@ module.exports = function MembersApi({
         // max request time is 500ms so shouldn't slow requests down too much
         let geolocation = JSON.stringify(await getGeolocationFromIP(ip));
         if (geolocation) {
-            member.geolocation = geolocation;
-            await users.update(member, {id: member.id});
+            const data = Object.assign(member.toJSON(), {geolocation});
+            await users.update(data, {id: member.id});
         }
 
         return getMemberIdentityData(email);
