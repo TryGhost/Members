@@ -44,7 +44,7 @@ const unparse = (members) => {
     });
 
     return papaparse.unparse(mappedMembers, {
-        columns: columns.values()
+        columns: Array.from(columns.values())
     });
 };
 
