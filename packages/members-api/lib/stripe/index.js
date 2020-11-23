@@ -251,11 +251,12 @@ module.exports = class StripePaymentProcessor {
     }
 
     async updateSubscriptionFromClient(subscription) {
-        const updatedSubscription = await update(
-            this._stripe, 'subscriptions',
-            subscription.id,
-            _.pick(subscription, ['plan', 'cancel_at_period_end'])
-        );
+        /** @type {Object} */
+        const data = _.pick(subscription, ['plan', 'cancel_at_period_end']);
+        data.metadata = {
+            cancellation_reason: subscription.cancellation_reason || null
+        };
+        const updatedSubscription = await update(this._stripe, 'subscriptions', subscription.id, data);
         await this._updateSubscription(updatedSubscription);
 
         return updatedSubscription;
