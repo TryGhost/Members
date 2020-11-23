@@ -497,7 +497,7 @@ module.exports = class StripePaymentProcessor {
         return customer;
     }
 
-    async getSetupIntent(id, options) {
+    async getSetupIntent(id, options = {}) {
         return retrieve(this._stripe, 'setupIntents', id, options);
     }
 
@@ -505,7 +505,7 @@ module.exports = class StripePaymentProcessor {
         return create(this._stripe, 'customers', options);
     }
 
-    async getCustomer(id, options) {
+    async getCustomer(id, options = {}) {
         return retrieve(this._stripe, 'customers', id, options);
     }
 };

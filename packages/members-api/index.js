@@ -91,7 +91,8 @@ module.exports = function MembersApi({
             return metadata.setMetadata('stripe', data);
         }
     };
-    const stripe = paymentConfig.stripe ? new StripePaymentProcessor(paymentConfig.stripe, stripeStorage, common.logging) : null;
+    /** @type {StripePaymentProcessor} */
+    const stripe = (paymentConfig.stripe ? new StripePaymentProcessor(paymentConfig.stripe, stripeStorage, common.logging) : null);
 
     async function ensureStripe(_req, res, next) {
         if (!stripe) {
@@ -261,7 +262,7 @@ module.exports = function MembersApi({
             return res.end('Bad Request.');
         }
 
-        // NOTE: never allow "Complimenatry" plan to be subscribed to from the client
+        // NOTE: never allow "Complimentary" plan to be subscribed to from the client
         if (plan.toLowerCase() === 'complimentary') {
             res.writeHead(400);
             return res.end('Bad Request.');
@@ -273,7 +274,7 @@ module.exports = function MembersApi({
                 email = null;
             } else {
                 const claims = await decodeToken(identity);
-                email = claims.sub;
+                email = claims && claims.sub;
             }
         } catch (err) {
             res.writeHead(401);
@@ -317,7 +318,7 @@ module.exports = function MembersApi({
                 email = null;
             } else {
                 const claims = await decodeToken(identity);
-                email = claims.sub;
+                email = claims && claims.sub;
             }
         } catch (err) {
             res.writeHead(401);
