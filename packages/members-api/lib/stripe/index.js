@@ -25,10 +25,16 @@ module.exports = class StripePaymentProcessor {
     }
 
     async _configure(config) {
+        const __TEST_MODE__ = config.secretKey.startsWith('sk_test_');
+        if (!__TEST_MODE__ && process.env.NODE_ENV !== 'production') {
+            const error = new Error('Cannot use live Stripe keys in development mode. Please restart Ghost in production mode.');
+            error.fatal = true;
+            return this._rejectReady(error);
+        }
         this._stripe = require('stripe')(config.secretKey);
         this._stripe.setAppInfo(config.appInfo);
         this._stripe.setApiVersion(STRIPE_API_VERSION);
-        this._stripe.__TEST_MODE__ = config.secretKey.startsWith('sk_test_');
+        this._stripe.__TEST_MODE__ = __TEST_MODE__;
         this._public_token = config.publicKey;
         this._checkoutSuccessUrl = config.checkoutSuccessUrl;
         this._checkoutCancelUrl = config.checkoutCancelUrl;
@@ -62,6 +68,12 @@ module.exports = class StripePaymentProcessor {
                 product: this._product,
                 plans: this._plans
             });
+        }
+
+        if (process.env.NODE_ENV !== 'production') {
+            const error = new Error('Cannot use remote webhooks in development mode. Please use the WEBHOOK_SECRET environment variable.');
+            error.fatal = true;
+            return this._rejectReady(error);
         }
 
         const webhookConfig = {
