@@ -420,33 +420,50 @@ module.exports = class StripeService {
         return subscription;
     }
 
-    /*
-    async createComplimentarySubscription(customer) {
-        const monthlyPlan = this._plans.find(plan => plan.interval === 'month');
-        if (!monthlyPlan) {
-            throw new Error('Could not find monthly plan');
-        }
-        const complimentaryCurrency = monthlyPlan.currency.toLowerCase();
-        const complimentaryPlan = this._plans.find(plan => plan.nickname === 'Complimentary' && plan.currency === complimentaryCurrency);
+    /**
+     * @param {string} customer - The ID of the Customer to create the subscription for
+     * @param {string} plan - The ID of the new Plan
+     *
+     * @returns {Promise<import('stripe').subscriptions.ISubscription>}
+     */
+    async createSubscription(customer, plan) {
+        const subscription = await this._stripe.subscriptions.create({
+            customer,
+            items: [{plan}]
+        });
+        return subscription;
+    }
 
-        if (!complimentaryPlan) {
-            throw new Error('Could not find complimentaryPlan');
-        }
+    /**
+     * @param {string} id
+     * @param {IDataOptions} options
+     *
+     * @returns {Promise<import('stripe').setupIntents.ISetupIntent>}
+     */
+    async getSetupIntent(id, options = {}) {
+        return await this._stripe.setupIntents.retrieve(id, options);
+    }
 
-        return create(this._stripe, 'subscriptions', {
-            customer: customer.id,
-            items: [{
-                plan: complimentaryPlan.id
-            }]
+    /**
+     * @param {string} customer
+     * @param {string} paymentMethod
+     *
+     * @returns {Promise<void>}
+     */
+    async attachPaymentMethodToCustomer(customer, paymentMethod) {
+        await this._stripe.paymentMethods.attach(paymentMethod, {customer});
+        return;
+    }
+
+    /**
+     * @param {string} subscription
+     * @param {string} paymentMethod
+     *
+     * @returns {Promise<import('stripe').subscriptions.ISubscription>}
+     */
+    async updateSubscriptionDefaultPaymentMethod(subscription, paymentMethod) {
+        return await this._stripe.subscriptions.update(subscription, {
+            default_payment_method: paymentMethod
         });
     }
-    */
 };
-
-/*
- * @TODO
- * - attach payment method to customer method
- * - update subscription default payment method
- * - create comp subscription
- * - get setup intent
- */
