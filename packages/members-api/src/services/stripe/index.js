@@ -38,10 +38,6 @@ module.exports = class StripeService {
      * @param {object} params.config
      * @param {string} params.config.secretKey
      * @param {string} params.config.publicKey
-     * @param {string} params.config.checkoutSuccessUrl
-     * @param {string} params.config.checkoutCancelUrl
-     * @param {string} params.config.billingSuccessUrl
-     * @param {string} params.config.billingCancelUrl
      * @param {object} params.config.appInfo
      * @param {string} params.config.appInfo.name
      * @param {string} params.config.appInfo.version
