@@ -74,6 +74,7 @@ module.exports = class StripeService {
         const getOrCreateActiveProduct = async (idSeed) => {
             const id = hash(prefixHashSeed(idSeed));
             try {
+                await this._rateLimitBucket.throttle();
                 const product = await this._stripe.products.retrieve(id);
 
                 if (product.active) {
@@ -85,6 +86,7 @@ module.exports = class StripeService {
                 if (err.code !== 'resource_missing') {
                     throw err;
                 }
+                await this._rateLimitBucket.throttle();
                 return this._stripe.products.create({
                     id,
                     name
@@ -113,6 +115,7 @@ module.exports = class StripeService {
         const getOrCreateActivePlan = async (idSeed) => {
             const id = hash(prefixHashSeed(idSeed));
             try {
+                await this._rateLimitBucket.throttle();
                 const plan = await this._stripe.plans.retrieve(id);
 
                 if (plan.active) {
@@ -124,6 +127,7 @@ module.exports = class StripeService {
                 if (err.code !== 'resource_missing') {
                     throw err;
                 }
+                await this._rateLimitBucket.throttle();
                 return this._stripe.plans.create({
                     id,
                     nickname: plan.name,
@@ -304,6 +308,7 @@ module.exports = class StripeService {
     async createCheckoutSession(plan, customer, options) {
         const metadata = options.metadata || undefined;
         const customerEmail = customer ? undefined : options.customerEmail;
+        await this._rateLimitBucket.throttle();
         const session = await this._stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             success_url: options.successUrl,
@@ -331,6 +336,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').checkouts.sessions.ICheckoutSession>}
      */
     async createCheckoutSetupSession(customer, options) {
+        await this._rateLimitBucket.throttle();
         const session = await this._stripe.checkout.sessions.create({
             mode: 'setup',
             payment_method_types: ['card'],
@@ -379,6 +385,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').subscriptions.ISubscription>}
      */
     async cancelSubscriptionAtPeriodEnd(id, reason = '') {
+        await this._rateLimitBucket.throttle();
         const subscription = await this._stripe.subscriptions.update(id, {
             cancel_at_period_end: true,
             metadata: {
@@ -394,6 +401,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').subscriptions.ISubscription>}
      */
     async continueSubscriptionAtPeriodEnd(id) {
+        await this._rateLimitBucket.throttle();
         const subscription = await this._stripe.subscriptions.update(id, {
             cancel_at_period_end: false,
             metadata: {
@@ -410,6 +418,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').subscriptions.ISubscription>}
      */
     async changeSubscriptionPlan(id, plan) {
+        await this._rateLimitBucket.throttle();
         const subscription = await this._stripe.subscriptions.update(id, {
             plan,
             cancel_at_period_end: false,
@@ -427,6 +436,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').subscriptions.ISubscription>}
      */
     async createSubscription(customer, plan) {
+        await this._rateLimitBucket.throttle();
         const subscription = await this._stripe.subscriptions.create({
             customer,
             items: [{plan}]
@@ -441,6 +451,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').setupIntents.ISetupIntent>}
      */
     async getSetupIntent(id, options = {}) {
+        await this._rateLimitBucket.throttle();
         return await this._stripe.setupIntents.retrieve(id, options);
     }
 
@@ -451,6 +462,7 @@ module.exports = class StripeService {
      * @returns {Promise<void>}
      */
     async attachPaymentMethodToCustomer(customer, paymentMethod) {
+        await this._rateLimitBucket.throttle();
         await this._stripe.paymentMethods.attach(paymentMethod, {customer});
         return;
     }
@@ -462,6 +474,7 @@ module.exports = class StripeService {
      * @returns {Promise<import('stripe').subscriptions.ISubscription>}
      */
     async updateSubscriptionDefaultPaymentMethod(subscription, paymentMethod) {
+        await this._rateLimitBucket.throttle();
         return await this._stripe.subscriptions.update(subscription, {
             default_payment_method: paymentMethod
         });
