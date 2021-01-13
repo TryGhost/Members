@@ -11,12 +11,10 @@
     "lint": "eslint '**/*.js'",
     "posttest": "yarn lint"
   },
-  "types": "types/index.d.ts",
   "files": [
     "index.js",
     "lib",
-    "src",
-    "types"
+    "src"
   ],
   "devDependencies": {
     "@types/stripe": "7.13.24",
