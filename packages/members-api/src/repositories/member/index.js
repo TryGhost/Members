@@ -4,7 +4,7 @@ module.exports = class MemberRepository {
      * @param {any} deps.Member
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
-     * @param {import('../../services/stripe')} deps.StripeAPIService
+     * @param {import('../../services/stripe-api')} deps.StripeAPIService
      */
     constructor({
         Member,

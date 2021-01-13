@@ -27,7 +27,7 @@ const STRIPE_API_VERSION = '2019-09-09';
  * @typedef {'customers'|'subscriptions'|'plans'} StripeResource
  */
 
-module.exports = class StripeService {
+module.exports = class StripeAPIService {
     /**
      * StripeService
      *
