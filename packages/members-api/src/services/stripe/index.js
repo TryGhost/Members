@@ -379,6 +379,26 @@ module.exports = class StripeService {
     }
 
     /**
+     * cancelSubscription.
+     *
+     * @param {string} id
+     *
+     * @returns {Promise<import('stripe').subscriptions.ISubscription>}
+     */
+    async cancelSubscription(id) {
+        debug(`cancelSubscription(${id})`);
+        try {
+            await this._rateLimitBucket.throttle();
+            const subscription = await this._stripe.subscriptions.del(id);
+            debug(`cancelSubscription(${id}) -> Success`);
+            return subscription;
+        } catch (err) {
+            debug(`cancelSubscription(${id}) -> ${err.type}`);
+            throw err;
+        }
+    }
+
+    /**
      * @param {string} id - The ID of the Subscription to modify
      * @param {string} [reason=''] - The user defined cancellation reason
      *
@@ -465,6 +485,21 @@ module.exports = class StripeService {
         await this._rateLimitBucket.throttle();
         await this._stripe.paymentMethods.attach(paymentMethod, {customer});
         return;
+    }
+
+    /**
+     * @param {string} id
+     *
+     * @returns {Promise<import('stripe').paymentMethods.ICardPaymentMethod|null>}
+     */
+    async getCardPaymentMethod(id) {
+        await this._rateLimitBucket.throttle();
+        const paymentMethod = await this._stripe.paymentMethods.retrieve(id);
+        if (paymentMethod.type !== 'card') {
+            return null;
+        }
+        /** @type {import('stripe').paymentMethods.ICardPaymentMethod} */
+        return paymentMethod;
     }
 
     /**
