@@ -4,18 +4,18 @@ module.exports = class MemberRepository {
      * @param {any} deps.Member
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
-     * @param {import('../../services/stripe-api')} deps.StripeAPIService
+     * @param {import('../../services/stripe-api')} deps.stripeAPIService
      */
     constructor({
         Member,
         StripeCustomer,
         StripeCustomerSubscription,
-        StripeAPIService
+        stripeAPIService
     }) {
         this._Member = Member;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
-        this._StripeAPIService = StripeAPIService;
+        this._stripeAPIService = stripeAPIService;
     }
 
     async get(data, options) {
@@ -59,7 +59,7 @@ module.exports = class MemberRepository {
             await member.related('stripeCustomers').fetch();
             const customers = member.related('stripeCustomers');
             for (const customer of customers.models) {
-                await this._StripeAPIService.updateCustomerEmail(
+                await this._stripeAPIService.updateCustomerEmail(
                     customer.get('customer_id'),
                     member.get('email')
                 );
@@ -84,7 +84,7 @@ module.exports = class MemberRepository {
             const subscriptions = member.related('stripeSubscriptions');
             for (const subscription of subscriptions.models) {
                 if (subscription.get('status') !== 'canceled') {
-                    const updatedSubscription = await this._StripeAPIService.cancelSubscription(
+                    const updatedSubscription = await this._stripeAPIService.cancelSubscription(
                         subscription.get('subscription_id')
                     );
                     await this._StripeCustomerSubscription.update({
@@ -100,7 +100,7 @@ module.exports = class MemberRepository {
     }
 
     async linkStripeCustomer(data) {
-        const customer = await this._StripeAPIService.getCustomer(data.customer_id);
+        const customer = await this._stripeAPIService.getCustomer(data.customer_id);
 
         if (!customer) {
             return;
@@ -121,7 +121,7 @@ module.exports = class MemberRepository {
             } else {
                 paymentMethodId = subscription.default_payment_method.id;
             }
-            const paymentMethod = await this._StripeAPIService.getCardPaymentMethod(paymentMethodId);
+            const paymentMethod = await this._stripeAPIService.getCardPaymentMethod(paymentMethodId);
             await this._StripeCustomerSubscription.upsert({
                 customer_id: data.customer_id,
                 subscription_id: subscription.id,
@@ -163,9 +163,9 @@ module.exports = class MemberRepository {
         }
 
         if (data.subscription.cancel_at_period_end) {
-            await this._StripeAPIService.cancelSubscriptionAtPeriodEnd(data.subscription.subscription_id);
+            await this._stripeAPIService.cancelSubscriptionAtPeriodEnd(data.subscription.subscription_id);
         } else {
-            await this._StripeAPIService.continueSubscriptionAtPeriodEnd(data.subscription.subscription_id);
+            await this._stripeAPIService.continueSubscriptionAtPeriodEnd(data.subscription.subscription_id);
         }
 
         await this._StripeCustomerSubscription.update({
