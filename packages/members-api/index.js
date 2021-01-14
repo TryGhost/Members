@@ -12,6 +12,7 @@ const {getGeolocationFromIP} = require('./lib/geolocation');
 const StripeAPIService = require('./src/services/stripe-api');
 const StripePlansService = require('./src/services/stripe-plans');
 const StripeWebhookService = require('./src/services/stripe-webhook');
+const TokenService = require('./src/services/token');
 const MemberRepository = require('./src/repositories/member');
 
 module.exports = function MembersApi({
@@ -73,6 +74,17 @@ module.exports = function MembersApi({
         memberRepository
     });
 
+    const tokenService = new TokenService({privateKey, publicKey, issuer});
+
+    const magicLinkService = new MagicLink({
+        transporter,
+        tokenProvider,
+        getSigninURL,
+        getText,
+        getHTML,
+        getSubject
+    });
+
     const ready = Promise.all([
         stripePlansService.configure({
             product: paymentConfig.stripe.product,
@@ -121,15 +133,6 @@ module.exports = function MembersApi({
 
         return false;
     }
-
-    const magicLinkService = new MagicLink({
-        transporter,
-        tokenProvider,
-        getSigninURL,
-        getText,
-        getHTML,
-        getSubject
-    });
 
     const users = memberRepository;
 
