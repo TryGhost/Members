@@ -1,15 +1,31 @@
+const _ = require('lodash');
+
 module.exports = class StripeWebhookService {
     /**
      * @param {object} deps
      * @param {any} deps.StripeWebhook
      * @param {import('../stripe-api')} deps.stripeAPIService
+     * @param {import('../../repositories/member')} deps.memberRepository
      */
     constructor({
         StripeWebhook,
-        stripeAPIService
+        stripeAPIService,
+        memberRepository
     }) {
         this._StripeWebhook = StripeWebhook;
         this._stripeAPIService = stripeAPIService;
+        this._memberRepository = memberRepository;
+        this.handlers = {};
+        this.registerHandler('customer.subscription.deleted', this.subscriptionEvent);
+        this.registerHandler('customer.subscription.updated', this.subscriptionEvent);
+        this.registerHandler('customer.subscription.created', this.subscriptionEvent);
+        this.registerHandler('invoice.payment_succeeded', this.invoiceEvent);
+        this.registerHandler('invoice.payment_failed', this.invoiceEvent);
+        this.registerHandler('checkout.session.completed', this.checkoutSessionEvent);
+    }
+
+    registerHandler(event, handler) {
+        this.handlers[event] = handler.name;
     }
 
     async configure(config) {
@@ -72,5 +88,127 @@ module.exports = class StripeWebhookService {
             secret: webhook.secret
         }, {webhook_id: webhook.id});
         this._webhookSecret = webhook.secret;
+    }
+
+    /**
+     * @param {string} body
+     * @param {string} signature
+     * @returns {import('stripe').events.IEvent}
+     */
+    parseWebhook(body, signature) {
+        return this._stripeAPIService.parseWebhook(body, signature, this._webhookSecret);
+    }
+
+    /**
+     * @param {import('stripe').events.IEvent} event
+     *
+     * @returns {Promise<void>}
+     */
+    async handleWebhook(event) {
+        if (!this.handlers[event.type]) {
+            return;
+        }
+
+        await this.handlers[event.type](event.data.object);
+    }
+
+    async subscriptionEvent(subscription) {
+        const member = await this._memberRepository.get({
+            customer_id: subscription.customer
+        });
+
+        if (member) {
+            await this._memberRepository.linkSubscription({
+                id: member.id,
+                subscription
+            });
+        }
+    }
+
+    async invoiceEvent(invoice) {
+        const subscription = await this._stripeAPIService.getSubscription(invoice.subscription, {
+            expand: ['default_payment_method']
+        });
+
+        const member = await this._memberRepository.get({
+            customer_id: subscription.customer
+        });
+
+        if (member) {
+            await this._memberRepository.linkSubscription({
+                id: member.id,
+                subscription
+            });
+        }
+    }
+
+    async checkoutSessionEvent(session) {
+        if (session.mode === 'setup') {
+            const setupIntent = await this._stripeAPIService.getSetupIntent(session.setup_intent);
+            const member = await this._memberRepository.get({
+                customer_id: setupIntent.metadata.customer_id
+            });
+
+            await this._stripeAPIService.attachPaymentMethodToCustomer(
+                setupIntent.metadata.customer_id,
+                setupIntent.payment_method
+            );
+
+            const subscriptions = member.related('stripeSubscriptions').fetch();
+
+            for (const subscription of subscriptions.models) {
+                const updatedSubscription = await this._stripeAPIService.updateSubscriptionDefaultPaymentMethod(
+                    subscription.id,
+                    setupIntent.payment_method
+                );
+                await this._memberRepository.linkSubscription({
+                    id: member.id,
+                    subscription: updatedSubscription
+                });
+            }
+        }
+
+        if (session.mode === 'subscription') {
+            const customer = await this._stripeAPIService.getCustomer(session.customer, {
+                expand: ['subscriptions.data.default_payment_method']
+            });
+
+            let member = await this._memberRepository.get({
+                email: customer.email
+            });
+
+            const checkoutType = _.get(session, 'metadata.checkoutType');
+            const requestSrc = _.get(session, 'metadata.requestSrc') || '';
+
+            if (!member) {
+                const metadataName = _.get(session, 'metadata.name');
+                const payerName = _.get(customer, 'subscriptions.data[0].default_payment_method.billing_details.name');
+                const name = metadataName || payerName || null;
+                member = await this._memberRepository.create({email: customer.email, name});
+            } else {
+                const payerName = _.get(customer, 'subscriptions.data[0].default_payment_method.billing_details.name');
+
+                if (payerName && !member.get('name')) {
+                    await this._memberRepository.update({name: payerName}, {id: member.get('id')});
+                }
+            }
+
+            await this._memberRepository.upsertCustomer({
+                customer_id: customer.id,
+                member_id: member.id,
+                name: customer.name,
+                email: customer.email
+            });
+
+            for (const subscription of customer.subscriptions.data) {
+                await this._memberRepository.linkSubscription({
+                    id: member.id,
+                    subscription
+                });
+            }
+
+            if (checkoutType !== 'upgrade') {
+            }
+        }
     }
 };

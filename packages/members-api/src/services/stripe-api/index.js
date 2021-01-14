@@ -307,7 +307,7 @@ module.exports = class StripeAPIService {
             customer: customer ? customer.id : undefined,
             customer_email: customerEmail,
             // @ts-ignore - we need to update to latest stripe library to correctly use newer features
-            allow_promotion_codes: this.config.enablePromoCodes,
+            allow_promotion_codes: this._config.enablePromoCodes,
             metadata,
             subscription_data: {
                 trial_from_plan: true,

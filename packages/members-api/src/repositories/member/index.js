@@ -19,6 +19,14 @@ module.exports = class MemberRepository {
     }
 
     async get(data, options) {
+        if (data.customer_id) {
+            const customer = await this._StripeCustomer.findOne({
+                customer_id: data.customer_id
+            }, {
+                withRelated: ['member']
+            });
+            return customer.related('member');
+        }
         return this._Member.findOne(data, options);
     }
 
@@ -99,6 +107,15 @@ module.exports = class MemberRepository {
         }, options);
     }
 
+    async upsertCustomer(data) {
+        return await this._StripeCustomer.upsert({
+            customer_id: data.customer_id,
+            member_id: data.member_id,
+            name: data.name,
+            email: data.email
+        });
+    }
+
     async linkStripeCustomer(data) {
         const customer = await this._stripeAPIService.getCustomer(data.customer_id);
 
@@ -115,34 +132,55 @@ module.exports = class MemberRepository {
         });
 
         for (const subscription of customer.subscriptions.data) {
-            let paymentMethodId;
-            if (typeof subscription.default_payment_method === 'string') {
-                paymentMethodId = subscription.default_payment_method;
-            } else {
-                paymentMethodId = subscription.default_payment_method.id;
-            }
-            const paymentMethod = await this._stripeAPIService.getCardPaymentMethod(paymentMethodId);
-            await this._StripeCustomerSubscription.upsert({
-                customer_id: data.customer_id,
-                subscription_id: subscription.id,
-                status: subscription.status,
-                cancel_at_period_end: subscription.cancel_at_period_end,
-                cancellation_reason: subscription.metadata && subscription.metadata.cancellation_reason || null,
-                current_period_end: new Date(subscription.current_period_end * 1000),
-                start_date: new Date(subscription.start_date * 1000),
-                default_payment_card_last4: paymentMethod && paymentMethod.card && paymentMethod.card.last4 || null,
-
-                plan_id: subscription.plan.id,
-                // NOTE: Defaulting to interval as migration to nullable field
-                // turned out to be much bigger problem.
-                // Ideally, would need nickname field to be nullable on the DB level
-                // condition can be simplified once this is done
-                plan_nickname: subscription.plan.nickname || subscription.plan.interval,
-                plan_interval: subscription.plan.interval,
-                plan_amount: subscription.plan.amount,
-                plan_currency: subscription.plan.currency
+            await this.linkSubscription({
+                id: data.member_id,
+                subscription
             });
         }
+    }
+
+    async linkSubscription(data) {
+        const member = await this._Member.findOne({
+            id: data.id
+        });
+
+        const customer = await member.related('stripeCustomers').where({
+            customer_id: data.subscription.customer
+        }).fetchOne();
+
+        if (!customer) {
+            // Maybe just link the customer?
+            throw new Error('Subscription is not associated with a customer for the member');
+        }
+
+        const subscription = data.subscription;
+        let paymentMethodId;
+        if (typeof subscription.default_payment_method === 'string') {
+            paymentMethodId = subscription.default_payment_method;
+        } else {
+            paymentMethodId = subscription.default_payment_method.id;
+        }
+        const paymentMethod = await this._stripeAPIService.getCardPaymentMethod(paymentMethodId);
+        await this._StripeCustomerSubscription.upsert({
+            customer_id: data.customer_id,
+            subscription_id: subscription.id,
+            status: subscription.status,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            cancellation_reason: subscription.metadata && subscription.metadata.cancellation_reason || null,
+            current_period_end: new Date(subscription.current_period_end * 1000),
+            start_date: new Date(subscription.start_date * 1000),
+            default_payment_card_last4: paymentMethod && paymentMethod.card && paymentMethod.card.last4 || null,
+
+            plan_id: subscription.plan.id,
+            // NOTE: Defaulting to interval as migration to nullable field
+            // turned out to be much bigger problem.
+            // Ideally, would need nickname field to be nullable on the DB level
+            // condition can be simplified once this is done
+            plan_nickname: subscription.plan.nickname || subscription.plan.interval,
+            plan_interval: subscription.plan.interval,
+            plan_amount: subscription.plan.amount,
+            plan_currency: subscription.plan.currency
+        });
     }
 
     async updateSubscription(data) {

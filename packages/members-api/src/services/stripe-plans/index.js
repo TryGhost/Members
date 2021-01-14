@@ -39,6 +39,19 @@ module.exports = class StripeService {
     }
 
     /**
+     * @param {string} nickname
+     * @returns {import('stripe').plans.IPlan}
+     */
+    getPlan(nickname) {
+        if (!this._configured) {
+            throw new Error('StripeService has not been configured');
+        }
+        return this.getPlans().find((plan) => {
+            return plan.nickname.toLowerCase() === nickname.toLowerCase();
+        });
+    }
+
+    /**
      * @param {Currency} currency
      * @returns {import('stripe').plans.IPlan}
      */

@@ -9,6 +9,11 @@ const Metadata = require('./lib/metadata');
 const common = require('./lib/common');
 const {getGeolocationFromIP} = require('./lib/geolocation');
 
+const StripeAPIService = require('./src/services/stripe-api');
+const StripePlansService = require('./src/services/stripe-plans');
+const StripeWebhookService = require('./src/services/stripe-webhook');
+const MemberRepository = require('./src/repositories/member');
+
 module.exports = function MembersApi({
     tokenConfig: {
         issuer,
@@ -39,13 +44,47 @@ module.exports = function MembersApi({
         common.logging.setLogger(logger);
     }
 
-    const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
-    const metadata = Metadata({
+    console.log(paymentConfig);
+
+    const stripeAPIService = new StripeAPIService({
+        config: {
+            secretKey: paymentConfig.stripe.secretKey,
+            publicKey: paymentConfig.stripe.publicKey,
+            appInfo: paymentConfig.stripe.appInfo,
+            enablePromoCodes: paymentConfig.stripe.enablePromoCodes
+        },
+        logger
+    });
+
+    const stripePlansService = new StripePlansService({
+        stripeAPIService
+    });
+
+    const memberRepository = new MemberRepository({
+        stripeAPIService,
         Member,
-        StripeWebhook,
         StripeCustomer,
         StripeCustomerSubscription
     });
+
+    const stripeWebhookService = new StripeWebhookService({
+        StripeWebhook,
+        stripeAPIService,
+        memberRepository
+    });
+
+    const ready = Promise.all([
+        stripePlansService.configure({
+            product: paymentConfig.stripe.product,
+            plans: paymentConfig.stripe.plans
+        }),
+        stripeWebhookService.configure({
+            webhookSecret: process.env.WEBHOOK_SECRET,
+            webhook: paymentConfig.stripe.webhook
+        })
+    ]);
+
+    const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
 
     async function hasActiveStripeSubscriptions() {
         const firstActiveSubscription = await StripeCustomerSubscription.findOne({
@@ -83,31 +122,6 @@ module.exports = function MembersApi({
         return false;
     }
 
-    const stripeStorage = {
-        async get(member) {
-            return metadata.getMetadata('stripe', member);
-        },
-        async set(data, options) {
-            return metadata.setMetadata('stripe', data, options);
-        }
-    };
-    /** @type {StripePaymentProcessor} */
-    const stripe = (paymentConfig.stripe ? new StripePaymentProcessor(paymentConfig.stripe, stripeStorage, common.logging) : null);
-
-    async function ensureStripe(_req, res, next) {
-        if (!stripe) {
-            res.writeHead(400);
-            return res.end('Stripe not configured');
-        }
-        try {
-            await stripe.ready();
-            next();
-        } catch (err) {
-            res.writeHead(500);
-            return res.end('There was an error configuring stripe');
-        }
-    }
-
     const magicLinkService = new MagicLink({
         transporter,
         tokenProvider,
@@ -117,11 +131,7 @@ module.exports = function MembersApi({
         getSubject
     });
 
-    const users = Users({
-        stripe,
-        Member,
-        StripeCustomer
-    });
+    const users = memberRepository;
 
     async function sendEmailWithMagicLink({email, requestedType, tokenData, options = {forceEmailType: false}, requestSrc = ''}) {
         let type = requestedType;
@@ -254,19 +264,19 @@ module.exports = function MembersApi({
         }
     });
 
-    middleware.createCheckoutSession.use(ensureStripe, body.json(), async function (req, res) {
+    middleware.createCheckoutSession.use(body.json(), async function (req, res) {
         const plan = req.body.plan;
         const identity = req.body.identity;
 
         if (!plan) {
             res.writeHead(400);
-            return res.end('Bad Request.');
+            return res.end('Missing plan');
         }
 
         // NOTE: never allow "Complimentary" plan to be subscribed to from the client
         if (plan.toLowerCase() === 'complimentary') {
             res.writeHead(400);
-            return res.end('Bad Request.');
+            return res.end('Requested complimentary plan');
         }
 
         let email;
@@ -282,7 +292,7 @@ module.exports = function MembersApi({
             return res.end('Unauthorized');
         }
 
-        const member = email ? await users.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
+        const member = email ? await users.get({email}, {withRelated: ['stripeCustomers', 'stripeSubscriptions']}) : null;
 
         // Do not allow members already with a subscription to initiate a new checkout session
         if (member && member.related('stripeSubscriptions').length > 0) {
@@ -291,12 +301,15 @@ module.exports = function MembersApi({
         }
 
         try {
-            const sessionInfo = await stripe.createCheckoutSession(member, plan, {
-                successUrl: req.body.successUrl,
-                cancelUrl: req.body.cancelUrl,
-                customerEmail: req.body.customerEmail,
-                metadata: req.body.metadata
-            });
+            const sessionInfo = await stripeAPIService.createCheckoutSession(
+                stripePlansService.getPlan(plan),
+                {
+                    successUrl: req.body.successUrl,
+                    cancelUrl: req.body.cancelUrl,
+                    customerEmail: req.body.customerEmail,
+                    metadata: req.body.metadata
+                }
+            );
 
             res.writeHead(200, {
                 'Content-Type': 'application/json'
@@ -310,7 +323,7 @@ module.exports = function MembersApi({
         }
     });
 
-    middleware.createCheckoutSetupSession.use(ensureStripe, body.json(), async function (req, res) {
+    middleware.createCheckoutSetupSession.use(body.json(), async function (req, res) {
         const identity = req.body.identity;
 
         let email;
@@ -333,7 +346,7 @@ module.exports = function MembersApi({
             return res.end('Bad Request.');
         }
 
-        const sessionInfo = await stripe.createCheckoutSetupSession(member, {
+        const sessionInfo = await stripeAPIService.createCheckoutSetupSession(member, {
             successUrl: req.body.successUrl,
             cancelUrl: req.body.cancelUrl
         });
@@ -345,10 +358,10 @@ module.exports = function MembersApi({
         res.end(JSON.stringify(sessionInfo));
     });
 
-    middleware.handleStripeWebhook.use(ensureStripe, body.raw({type: 'application/json'}), async function (req, res) {
+    middleware.handleStripeWebhook.use(body.raw({type: 'application/json'}), async function (req, res) {
         let event;
         try {
-            event = await stripe.parseWebhook(req.body, req.headers['stripe-signature']);
+            event = stripeWebhookService.parseWebhook(req.body, req.headers['stripe-signature']);
         } catch (err) {
             common.logging.error(err);
             res.writeHead(401);
@@ -356,65 +369,7 @@ module.exports = function MembersApi({
         }
         common.logging.info(`Handling webhook ${event.type}`);
         try {
-            if (event.type === 'customer.subscription.deleted') {
-                await stripe.handleCustomerSubscriptionDeletedWebhook(event.data.object);
-            }
-
-            if (event.type === 'customer.subscription.updated') {
-                await stripe.handleCustomerSubscriptionUpdatedWebhook(event.data.object);
-            }
-
-            if (event.type === 'customer.subscription.created') {
-                await stripe.handleCustomerSubscriptionCreatedWebhook(event.data.object);
-            }
-
-            if (event.type === 'invoice.payment_succeeded') {
-                await stripe.handleInvoicePaymentSucceededWebhook(event.data.object);
-            }
-
-            if (event.type === 'invoice.payment_failed') {
-                await stripe.handleInvoicePaymentFailedWebhook(event.data.object);
-            }
-
-            if (event.type === 'checkout.session.completed') {
-                if (event.data.object.mode === 'setup') {
-                    common.logging.info('Handling "setup" mode Checkout Session');
-                    const setupIntent = await stripe.getSetupIntent(event.data.object.setup_intent);
-                    const customer = await stripe.getCustomer(setupIntent.metadata.customer_id);
-                    const member = await users.get({email: customer.email});
-
-                    await stripe.handleCheckoutSetupSessionCompletedWebhook(setupIntent, member);
-                } else if (event.data.object.mode === 'subscription') {
-                    common.logging.info('Handling "subscription" mode Checkout Session');
-                    const customer = await stripe.getCustomer(event.data.object.customer, {
-                        expand: ['subscriptions.data.default_payment_method']
-                    });
-                    let member = await users.get({email: customer.email});
-                    const checkoutType = _.get(event, 'data.object.metadata.checkoutType');
-                    const requestSrc = _.get(event, 'data.object.metadata.requestSrc') || '';
-                    if (!member) {
-                        const metadataName = _.get(event, 'data.object.metadata.name');
-                        const payerName = _.get(customer, 'subscriptions.data[0].default_payment_method.billing_details.name');
-                        const name = metadataName || payerName || null;
-                        member = await users.create({email: customer.email, name});
-                    } else {
-                        const payerName = _.get(customer, 'subscriptions.data[0].default_payment_method.billing_details.name');
-
-                        if (payerName && !member.get('name')) {
-                            await users.update({name: payerName}, {id: member.get('id')});
-                        }
-                    }
-
-                    await stripe.handleCheckoutSessionCompletedWebhook(member, customer);
-                    if (checkoutType !== 'upgrade') {
-                        const emailType = 'signup';
-                        await sendEmailWithMagicLink({email: customer.email, requestedType: emailType, requestSrc, options: {forceEmailType: true}, tokenData: {}});
-                    }
-                } else if (event.data.object.mode === 'payment') {
-                    common.logging.info('Ignoring "payment" mode Checkout Session');
-                }
-            }
-
+            await stripeWebhookService.handleWebhook(event);
             res.writeHead(200);
             res.end();
         } catch (err) {
@@ -424,7 +379,7 @@ module.exports = function MembersApi({
         }
     });
 
-    middleware.updateSubscription.use(ensureStripe, body.json(), async function (req, res) {
+    middleware.updateSubscription.use(body.json(), async function (req, res) {
         const identity = req.body.identity;
         const subscriptionId = req.params.id;
         const cancelAtPeriodEnd = req.body.cancel_at_period_end;
@@ -502,7 +457,7 @@ module.exports = function MembersApi({
             subscriptionUpdateData.plan = plan.id;
         }
 
-        await stripe.updateSubscriptionFromClient(subscriptionUpdateData);
+        await stripeAPIService.updateSubscriptionFromClient(subscriptionUpdateData);
 
         res.writeHead(204);
         res.end();
@@ -517,15 +472,11 @@ module.exports = function MembersApi({
 
     const bus = new (require('events').EventEmitter)();
 
-    if (stripe) {
-        stripe.ready().then(() => {
-            bus.emit('ready');
-        }).catch((err) => {
-            bus.emit('error', err);
-        });
-    } else {
-        process.nextTick(() => bus.emit('ready'));
-    }
+    ready.then(() => {
+        bus.emit('ready');
+    }).catch((err) => {
+        bus.emit('error', err);
+    });
 
     return {
         middleware,
