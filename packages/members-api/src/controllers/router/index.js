@@ -4,26 +4,28 @@ const errors = require('ghost-ignition').errors;
 
 module.exports = class RouterController {
     constructor({
-        users,
+        memberRepository,
         allowSelfSignup,
-        MagicLinkService,
-        Stripe,
-        Tokens
+        magicLinkService,
+        stripeApiService,
+        stripePlanService,
+        tokenService
     }) {
-        this._users = users;
+        this._memberRepository = memberRepository;
         this._allowSelfSignup = allowSelfSignup;
-        this._MagicLinkService = MagicLinkService;
-        this._Stripe = Stripe;
-        this._Tokens = Tokens;
+        this._magicLinkService = magicLinkService;
+        this._stripeApiService = stripeApiService;
+        this._stripePlanService = stripePlanService;
+        this._tokenService = tokenService;
     }
 
     async ensureStripe(_req, res, next) {
-        if (!this._Stripe) {
+        if (!this._stripeApiService) {
             res.writeHead(400);
             return res.end('Stripe not configured');
         }
         try {
-            await this._Stripe.ready();
+            await this._stripeApiService.ready();
             next();
         } catch (err) {
             res.writeHead(500);
@@ -67,14 +69,14 @@ module.exports = class RouterController {
                 });
             }
 
-            const claims = await this._Tokens.decodeToken(identity);
+            const claims = await this._tokenService.decodeToken(identity);
             email = claims && claims.sub;
         } catch (err) {
             res.writeHead(401);
             return res.end('Unauthorized');
         }
 
-        const member = email ? await this._users.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
+        const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
 
         if (!member) {
             throw new errors.BadRequestError({
@@ -100,7 +102,7 @@ module.exports = class RouterController {
         }
 
         if (planName !== undefined) {
-            const plan = this._Stripe.findPlanByNickname(planName);
+            const plan = this._stripePlanService.getPlans().find(plan => plan.nickname === planName);
             if (!plan) {
                 throw new errors.BadRequestError({
                     message: 'Updating subscription failed! Could not find plan'
@@ -109,7 +111,7 @@ module.exports = class RouterController {
             subscriptionUpdateData.plan = plan.id;
         }
 
-        await this._Stripe.updateSubscriptionFromClient(subscriptionUpdateData);
+        await this._stripeApiService.updateSubscriptionFromClient(subscriptionUpdateData);
 
         res.writeHead(204);
         res.end();
@@ -123,7 +125,7 @@ module.exports = class RouterController {
             if (!identity) {
                 email = null;
             } else {
-                const claims = await this._Tokens.decodeToken(identity);
+                const claims = await this._tokenService.decodeToken(identity);
                 email = claims && claims.sub;
             }
         } catch (err) {
@@ -131,14 +133,14 @@ module.exports = class RouterController {
             return res.end('Unauthorized');
         }
 
-        const member = email ? await this._users.get({email}) : null;
+        const member = email ? await this._memberRepository.get({email}) : null;
 
         if (!member) {
             res.writeHead(403);
             return res.end('Bad Request.');
         }
 
-        const sessionInfo = await this._Stripe.createCheckoutSetupSession(member, {
+        const sessionInfo = await this._stripeApiService.createCheckoutSetupSession(member, {
             successUrl: req.body.successUrl,
             cancelUrl: req.body.cancelUrl
         });
@@ -170,7 +172,7 @@ module.exports = class RouterController {
             if (!identity) {
                 email = null;
             } else {
-                const claims = await this._Tokens.decodeToken(identity);
+                const claims = await this._tokenService.decodeToken(identity);
                 email = claims && claims.sub;
             }
         } catch (err) {
@@ -178,7 +180,7 @@ module.exports = class RouterController {
             return res.end('Unauthorized');
         }
 
-        const member = email ? await this._users.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
+        const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
 
         // Do not allow members already with a subscription to initiate a new checkout session
         if (member && member.related('stripeSubscriptions').length > 0) {
@@ -187,7 +189,7 @@ module.exports = class RouterController {
         }
 
         try {
-            const sessionInfo = await this._Stripe.createCheckoutSession(member, plan, {
+            const sessionInfo = await this._stripeApiService.createCheckoutSession(member, plan, {
                 successUrl: req.body.successUrl,
                 cancelUrl: req.body.cancelUrl,
                 customerEmail: req.body.customerEmail,
@@ -216,7 +218,7 @@ module.exports = class RouterController {
 
         try {
             if (oldEmail) {
-                const existingMember = await this._users.get({email});
+                const existingMember = await this._memberRepository.get({email});
                 if (existingMember) {
                     throw new errors.BadRequestError({
                         message: 'This email is already associated with a member'
@@ -226,14 +228,14 @@ module.exports = class RouterController {
             }
 
             if (!this._allowSelfSignup) {
-                const member = oldEmail ? await this._users.get({oldEmail}) : await this._users.get({email});
+                const member = oldEmail ? await this._memberRepository.get({oldEmail}) : await this._memberRepository.get({email});
                 if (member) {
                     const tokenData = _.pick(req.body, ['oldEmail']);
-                    await this._MagicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
+                    await this._magicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
                 }
             } else {
                 const tokenData = _.pick(req.body, ['labels', 'name', 'oldEmail']);
-                await this._MagicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
+                await this._magicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
             }
             res.writeHead(201);
             return res.end('Created.');
