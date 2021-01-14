@@ -109,7 +109,7 @@ module.exports = class StripeWebhookService {
             return;
         }
 
-        await this.handlers[event.type](event.data.object);
+        await this[this.handlers[event.type]](event.data.object);
     }
 
     async subscriptionEvent(subscription) {
