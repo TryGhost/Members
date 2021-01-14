@@ -1,4 +1,9 @@
 module.exports = class StripeWebhookService {
+    /**
+     * @param {object} deps
+     * @param {any} deps.StripeWebhook
+     * @param {import('../stripe-api')} deps.stripeAPIService
+     */
     constructor({
         StripeWebhook,
         stripeAPIService
@@ -13,59 +18,46 @@ module.exports = class StripeWebhookService {
             return;
         }
 
-        const webhookConfig = {
-            url: config.webhookHandlerUrl,
-            enabled_events: [
-                'checkout.session.completed',
-                'customer.subscription.deleted',
-                'customer.subscription.updated',
-                'customer.subscription.created',
-                'invoice.payment_succeeded',
-                'invoice.payment_failed'
-            ]
-        };
+        /** @type {import('stripe').events.EventType[]} */
+        const events = [
+            'checkout.session.completed',
+            'customer.subscription.deleted',
+            'customer.subscription.updated',
+            'customer.subscription.created',
+            'invoice.payment_succeeded',
+            'invoice.payment_failed'
+        ];
 
         const setupWebhook = async (id, secret, opts = {}) => {
             if (!id || !secret || opts.forceCreate) {
                 if (id && !opts.skipDelete) {
                     try {
-                        this.logging.info(`Deleting Stripe webhook ${id}`);
-                        await del(this._stripe, 'webhookEndpoints', id);
+                        await this._stripeAPIService.deleteWebhookEndpoint(id);
                     } catch (err) {
-                        this.logging.error(`Unable to delete Stripe webhook with id: ${id}`);
-                        this.logging.error(err);
+                        // Continue
                     }
                 }
-                try {
-                    this.logging.info(`Creating Stripe webhook with url: ${webhookConfig.url}, version: ${STRIPE_API_VERSION}, events: ${webhookConfig.enabled_events.join(', ')}`);
-                    const webhook = await create(this._stripe, 'webhookEndpoints', Object.assign({}, webhookConfig, {
-                        api_version: STRIPE_API_VERSION
-                    }));
-                    return {
-                        id: webhook.id,
-                        secret: webhook.secret
-                    };
-                } catch (err) {
-                    this.logging.error('Failed to create Stripe webhook. For local development please see https://ghost.org/docs/members/webhooks/#stripe-webhooks');
-                    this.logging.error(err);
-                    throw err;
-                }
+                const webhook = await this._stripeAPIService.createWebhookEndpoint(
+                    config.webhookHandlerUrl,
+                    events
+                );
+                return {
+                    id: webhook.id,
+                    secret: webhook.secret
+                };
             } else {
                 try {
-                    this.logging.info(`Updating Stripe webhook ${id} with url: ${webhookConfig.url}, events: ${webhookConfig.enabled_events.join(', ')}`);
-                    const updatedWebhook = await update(this._stripe, 'webhookEndpoints', id, webhookConfig);
-
-                    if (updatedWebhook.api_version !== STRIPE_API_VERSION) {
-                        throw new Error(`Webhook ${id} has api_version ${updatedWebhook.api_version}, expected ${STRIPE_API_VERSION}`);
-                    }
+                    await this._stripeAPIService.updateWebhookEndpoint(
+                        id,
+                        config.webhookHandlerUrl,
+                        events
+                    );
 
                     return {
                         id,
                         secret
                     };
                 } catch (err) {
-                    this.logging.error(`Unable to update Stripe webhook ${id}`);
-                    this.logging.error(err);
                     if (err.code === 'resource_missing') {
                         return setupWebhook(id, secret, {skipDelete: true, forceCreate: true});
                     }
@@ -74,17 +66,11 @@ module.exports = class StripeWebhookService {
             }
         };
 
-        try {
-            const webhook = await setupWebhook(config.webhook.id, config.webhook.secret);
-            await this.storage.set({
-                webhook: {
-                    webhook_id: webhook.id,
-                    secret: webhook.secret
-                }
-            });
-            this._webhookSecret = webhook.secret;
-        } catch (err) {
-            return this._rejectReady(err);
-        }
+        const webhook = await setupWebhook(config.webhook.id, config.webhook.secret);
+        await this._StripeWebhook.upsert({
+            webhook_id: webhook.id,
+            secret: webhook.secret
+        }, {webhook_id: webhook.id});
+        this._webhookSecret = webhook.secret;
     }
 };

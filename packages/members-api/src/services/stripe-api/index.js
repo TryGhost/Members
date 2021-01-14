@@ -203,23 +203,17 @@ module.exports = class StripeAPIService {
      * createWebhook.
      *
      * @param {string} url
+     * @param {import('stripe').events.EventType[]} events
      *
      * @returns {Promise<IWebhookEndpoint>}
      */
-    async createWebhookEndpoint(url) {
+    async createWebhookEndpoint(url, events) {
         debug(`createWebhook(${url})`);
         try {
             await this._rateLimitBucket.throttle();
             const webhook = await this._stripe.webhookEndpoints.create({
                 url,
-                enabled_events: [
-                    'checkout.session.completed',
-                    'customer.subscription.deleted',
-                    'customer.subscription.updated',
-                    'customer.subscription.created',
-                    'invoice.payment_succeeded',
-                    'invoice.payment_failed'
-                ],
+                enabled_events: events,
                 api_version: STRIPE_API_VERSION
             });
             debug(`createWebhook(${url}) -> Success`);
@@ -251,24 +245,21 @@ module.exports = class StripeAPIService {
     /**
      * @param {string} id
      * @param {string} url
+     * @param {import('stripe').events.EventType[]} events
      *
      * @returns {Promise<IWebhookEndpoint>}
      */
-    async updateWebhookEndpoint(id, url) {
+    async updateWebhookEndpoint(id, url, events) {
         debug(`updateWebhook(${id}, ${url})`);
         try {
             await this._rateLimitBucket.throttle();
             const webhook = await this._stripe.webhookEndpoints.update(id, {
                 url,
-                enabled_events: [
-                    'checkout.session.completed',
-                    'customer.subscription.deleted',
-                    'customer.subscription.updated',
-                    'customer.subscription.created',
-                    'invoice.payment_succeeded',
-                    'invoice.payment_failed'
-                ]
+                enabled_events: events
             });
+            if (webhook.api_version !== STRIPE_API_VERSION) {
+                throw new Error('Webhook has incorrect api_version');
+            }
             debug(`updateWebhook(${id}, ${url}) -> Success`);
             return webhook;
         } catch (err) {
