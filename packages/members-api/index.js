@@ -233,19 +233,19 @@ module.exports = function MembersApi({
     const middleware = {
         sendMagicLink: Router().use(
             body.json(),
-            routerController.sendMagicLink
+            routerController.sendMagicLink()
         ),
         createCheckoutSession: Router().use(
             body.json(),
-            routerController.createCheckoutSession
+            routerController.createCheckoutSession()
         ),
         createCheckoutSetupSession: Router().use(
             body.json(),
-            routerController.createCheckoutSetupSession
+            routerController.createCheckoutSetupSession()
         ),
         updateSubscription: Router({mergeParams: true}).use(
             body.json(),
-            routerController.updateSubscription
+            routerController.updateSubscription()
         ),
         handleStripeWebhook: Router()
     };
