@@ -1,3 +1,4 @@
+const _ = require('lodash');
 module.exports = class MemberRepository {
     /**
      * @param {object} deps
@@ -57,14 +58,14 @@ module.exports = class MemberRepository {
     }
 
     async update(data, options) {
-        const member = await this._Member.edit({
-            email: data.email,
-            name: data.name,
-            note: data.note,
-            subscribed: data.subscribed,
-            labels: data.labels,
-            geolocation: data.geolocation
-        }, options);
+        const member = await this._Member.edit(_.pick(data, [
+            'email',
+            'name',
+            'note',
+            'subscribed',
+            'labels',
+            'geolocation'
+        ]), options);
 
         if (member._changed.email) {
             await member.related('stripeCustomers').fetch();
@@ -76,6 +77,8 @@ module.exports = class MemberRepository {
                 );
             }
         }
+
+        return member;
     }
 
     async list(options) {
