@@ -25,7 +25,10 @@ module.exports = class MemberRepository {
             }, {
                 withRelated: ['member']
             });
-            return customer.related('member');
+            if (customer) {
+                return customer.related('member');
+            }
+            return null;
         }
         return this._Member.findOne(data, options);
     }
@@ -144,8 +147,10 @@ module.exports = class MemberRepository {
             id: data.id
         });
 
-        const customer = await member.related('stripeCustomers').where({
-            customer_id: data.subscription.customer
+        const customer = await member.related('stripeCustomers').query({
+            where: {
+                customer_id: data.subscription.customer
+            }
         }).fetchOne();
 
         if (!customer) {

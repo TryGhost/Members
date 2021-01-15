@@ -3,11 +3,6 @@ const {Router} = require('express');
 const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./lib/common');
-const StripePaymentProcessor = require('./lib/stripe');
-const Tokens = require('./lib/tokens');
-const Users = require('./lib/users');
-const Metadata = require('./lib/metadata');
-const {getGeolocationFromIP} = require('./lib/geolocation');
 
 const StripeAPIService = require('./src/services/stripe-api');
 const StripePlansService = require('./src/services/stripe-plans');
@@ -112,8 +107,6 @@ module.exports = function MembersApi({
             webhook: paymentConfig.stripe.webhook
         })
     ]);
-
-    const {encodeIdentityToken, decodeToken} = Tokens({privateKey, publicKey, issuer});
 
     async function hasActiveStripeSubscriptions() {
         const firstActiveSubscription = await StripeCustomerSubscription.findOne({

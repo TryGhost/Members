@@ -169,19 +169,21 @@ module.exports = class RouterController {
     }
 
     async createCheckoutSession(req, res) {
-        const plan = req.body.plan;
+        const planName = req.body.plan;
         const identity = req.body.identity;
 
-        if (!plan) {
+        if (!planName) {
             res.writeHead(400);
             return res.end('Bad Request.');
         }
 
         // NOTE: never allow "Complimentary" plan to be subscribed to from the client
-        if (plan.toLowerCase() === 'complimentary') {
+        if (planName.toLowerCase() === 'complimentary') {
             res.writeHead(400);
             return res.end('Bad Request.');
         }
+
+        const plan = this._stripePlansService.getPlan(planName);
 
         let email;
         try {
@@ -196,7 +198,29 @@ module.exports = class RouterController {
             return res.end('Unauthorized');
         }
 
-        const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
+        const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'stripeSubscriptions']}) : null;
+
+        if (!member) {
+            const customer = null;
+            const session = await this._stripeAPIService.createCheckoutSession(plan, customer, {
+                successUrl: req.body.successUrl,
+                cancelUrl: req.body.cancelUrl,
+                customerEmail: req.body.customerEmail,
+                metadata: req.body.metadata
+            });
+            const publicKey = this._stripeAPIService.getPublicKey();
+
+            const sessionInfo = {
+                publicKey,
+                sessionId: session.id
+            };
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json'
+            });
+
+            res.end(JSON.stringify(sessionInfo));
+        }
 
         // Do not allow members already with a subscription to initiate a new checkout session
         if (member && member.related('stripeSubscriptions').length > 0) {
