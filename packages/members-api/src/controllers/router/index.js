@@ -157,8 +157,9 @@ module.exports = class RouterController {
             res.writeHead(403);
             return res.end('Bad Request.');
         }
+        const customer = await this._stripeAPIService.getCustomerForMemberCheckoutSession(member);
 
-        const session = await this._stripeAPIService.createCheckoutSetupSession(member, {
+        const session = await this._stripeAPIService.createCheckoutSetupSession(customer, {
             successUrl: req.body.successUrl,
             cancelUrl: req.body.cancelUrl
         });

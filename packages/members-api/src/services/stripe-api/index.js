@@ -163,6 +163,34 @@ module.exports = class StripeAPIService {
     }
 
     /**
+     * @param {any} member
+     *
+     * @returns {Promise<ICustomer>}
+     */
+    async getCustomerForMemberCheckoutSession(member) {
+        await member.related('stripeCustomers').fetch();
+        const customers = member.related('stripeCustomers');
+
+        for (const data of customers) {
+            try {
+                const customer = await this.getCustomer(data.customer_id);
+                if (!customer.deleted) {
+                    return customer;
+                }
+            } catch (err) {
+                debug(`Ignoring Error getting customer for member ${err.message}`);
+            }
+        }
+
+        debug(`Creating customer for member ${member.get('email')}`);
+        const customer = await this.createCustomer({
+            email: member.get('email')
+        });
+
+        return customer;
+    }
+
+    /**
      * @param {IDataOptions} options
      *
      * @returns {Promise<ICustomer>}
