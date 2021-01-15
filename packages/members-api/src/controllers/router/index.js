@@ -106,10 +106,7 @@ module.exports = class RouterController {
             return res.end('No permission');
         }
 
-        const subscriptionUpdateData = {
-            id: subscriptionId
-        };
-
+        let updatedSubscription;
         if (planName !== undefined) {
             const plan = this._stripePlansService.getPlans().find(plan => plan.nickname === planName);
             if (!plan) {
@@ -117,18 +114,23 @@ module.exports = class RouterController {
                     message: 'Updating subscription failed! Could not find plan'
                 });
             }
-            subscriptionUpdateData.plan = plan.id;
-            await this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
+            updatedSubscription = await this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
         } else if (cancelAtPeriodEnd !== undefined) {
             if (cancelAtPeriodEnd) {
-                await this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
+                updatedSubscription = await this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
                     subscriptionId, cancellationReason
                 );
             } else {
-                await this._stripeAPIService.continueSubscriptionAtPeriodEnd(
+                updatedSubscription = await this._stripeAPIService.continueSubscriptionAtPeriodEnd(
                     subscriptionId
                 );
             }
+        }
+        if (updatedSubscription) {
+            await this._memberRepository.linkSubscription({
+                id: member.id,
+                subscription: updatedSubscription
+            });
         }
 
         res.writeHead(204);
