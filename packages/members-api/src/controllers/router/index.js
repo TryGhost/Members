@@ -230,24 +230,47 @@ module.exports = class RouterController {
         }
 
         // Do not allow members already with a subscription to initiate a new checkout session
-        if (member && member.related('stripeSubscriptions').length > 0) {
+        if (member.related('stripeSubscriptions').length > 0) {
             res.writeHead(403);
             return res.end('No permission');
         }
 
+        let stripeCustomer;
+
+        for (const customer of member.related('stripeCustomers').models) {
+            try {
+                const fetchedCustomer = await this._stripeAPIService.getCustomer(customer.customer_id);
+                if (!fetchedCustomer.deleted) {
+                    stripeCustomer = fetchedCustomer;
+                    break;
+                }
+            } catch (err) {
+                console.log('Ignoring error for fetching customer for checkout');
+            }
+        }
+
+        if (!stripeCustomer) {
+            stripeCustomer = await this._stripeAPIService.createCustomer({email: member.email});
+        }
+
         try {
-            const sessionInfo = await this._stripeAPIService.createCheckoutSession(member, plan, {
+            const session = await this._stripeAPIService.createCheckoutSession(plan, stripeCustomer, {
                 successUrl: req.body.successUrl,
                 cancelUrl: req.body.cancelUrl,
-                customerEmail: req.body.customerEmail,
                 metadata: req.body.metadata
             });
+            const publicKey = this._stripeAPIService.getPublicKey();
+
+            const sessionInfo = {
+                publicKey,
+                sessionId: session.id
+            };
 
             res.writeHead(200, {
                 'Content-Type': 'application/json'
             });
 
-            res.end(JSON.stringify(sessionInfo));
+            return res.end(JSON.stringify(sessionInfo));
         } catch (e) {
             const error = e.message || 'Unable to initiate checkout session';
             res.writeHead(400);

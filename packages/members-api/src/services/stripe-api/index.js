@@ -326,7 +326,7 @@ module.exports = class StripeAPIService {
      */
     async createCheckoutSession(plan, customer, options) {
         const metadata = options.metadata || undefined;
-        const customerEmail = customer ? undefined : options.customerEmail;
+        const customerEmail = customer ? customer.email : options.customerEmail;
         await this._rateLimitBucket.throttle();
         const session = await this._stripe.checkout.sessions.create({
             payment_method_types: ['card'],
