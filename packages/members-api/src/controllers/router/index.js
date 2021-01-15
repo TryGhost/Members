@@ -229,17 +229,18 @@ module.exports = class RouterController {
             return res.end(JSON.stringify(sessionInfo));
         }
 
-        // Do not allow members already with a subscription to initiate a new checkout session
-        if (member.related('stripeSubscriptions').length > 0) {
-            res.writeHead(403);
-            return res.end('No permission');
+        for (const subscription of member.related('stripeSubscriptions')) {
+            if (['active', 'trialing', 'unpaid', 'past_due'].includes(subscription.get('status'))) {
+                res.writeHead(403);
+                return res.end('No permission');
+            }
         }
 
         let stripeCustomer;
 
         for (const customer of member.related('stripeCustomers').models) {
             try {
-                const fetchedCustomer = await this._stripeAPIService.getCustomer(customer.customer_id);
+                const fetchedCustomer = await this._stripeAPIService.getCustomer(customer.get('customer_id'));
                 if (!fetchedCustomer.deleted) {
                     stripeCustomer = fetchedCustomer;
                     break;
