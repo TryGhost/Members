@@ -221,7 +221,7 @@ module.exports = class RouterController {
                 'Content-Type': 'application/json'
             });
 
-            res.end(JSON.stringify(sessionInfo));
+            return res.end(JSON.stringify(sessionInfo));
         }
 
         // Do not allow members already with a subscription to initiate a new checkout session

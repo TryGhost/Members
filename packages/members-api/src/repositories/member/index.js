@@ -170,7 +170,7 @@ module.exports = class MemberRepository {
         }
         const paymentMethod = await this._stripeAPIService.getCardPaymentMethod(paymentMethodId);
         await this._StripeCustomerSubscription.upsert({
-            customer_id: data.customer_id,
+            customer_id: subscription.customer,
             subscription_id: subscription.id,
             status: subscription.status,
             cancel_at_period_end: subscription.cancel_at_period_end,
@@ -188,6 +188,8 @@ module.exports = class MemberRepository {
             plan_interval: subscription.plan.interval,
             plan_amount: subscription.plan.amount,
             plan_currency: subscription.plan.currency
+        }, {
+            subscription_id: subscription.id
         });
     }
 
