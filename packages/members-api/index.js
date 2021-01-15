@@ -94,7 +94,8 @@ module.exports = function MembersApi({
         magicLinkService,
         stripeAPIService,
         stripePlansService,
-        tokenService
+        tokenService,
+        sendEmailWithMagicLink
     });
 
     const ready = Promise.all([

@@ -20,7 +20,8 @@ module.exports = class RouterController {
         magicLinkService,
         stripeAPIService,
         stripePlansService,
-        tokenService
+        tokenService,
+        sendEmailWithMagicLink
     }) {
         this._memberRepository = memberRepository;
         this._allowSelfSignup = allowSelfSignup;
@@ -28,6 +29,7 @@ module.exports = class RouterController {
         this._stripeAPIService = stripeAPIService;
         this._stripePlansService = stripePlansService;
         this._tokenService = tokenService;
+        this._sendEmailWithMagicLink = sendEmailWithMagicLink;
     }
 
     async ensureStripe(_req, res, next) {
@@ -271,11 +273,11 @@ module.exports = class RouterController {
                 const member = oldEmail ? await this._memberRepository.get({oldEmail}) : await this._memberRepository.get({email});
                 if (member) {
                     const tokenData = _.pick(req.body, ['oldEmail']);
-                    await this._magicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
+                    await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
                 }
             } else {
                 const tokenData = _.pick(req.body, ['labels', 'name', 'oldEmail']);
-                await this._magicLinkService.sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
+                await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc, options: {forceEmailType}});
             }
             res.writeHead(201);
             return res.end('Created.');
