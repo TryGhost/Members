@@ -158,11 +158,15 @@ module.exports = class RouterController {
             return res.end('Bad Request.');
         }
 
-        const sessionInfo = await this._stripeAPIService.createCheckoutSetupSession(member, {
+        const session = await this._stripeAPIService.createCheckoutSetupSession(member, {
             successUrl: req.body.successUrl,
             cancelUrl: req.body.cancelUrl
         });
-
+        const publicKey = this._stripeAPIService.getPublicKey();
+        const sessionInfo = {
+            sessionId: session.id,
+            publicKey
+        };
         res.writeHead(200, {
             'Content-Type': 'application/json'
         });
