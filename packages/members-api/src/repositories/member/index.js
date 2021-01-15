@@ -6,17 +6,20 @@ module.exports = class MemberRepository {
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
+     * @param {import('../../services/stripe-plans')} deps.stripePlansService
      */
     constructor({
         Member,
         StripeCustomer,
         StripeCustomerSubscription,
-        stripeAPIService
+        stripeAPIService,
+        stripePlansService
     }) {
         this._Member = Member;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
+        this._stripePlansService = stripePlansService;
     }
 
     async get(data, options) {
@@ -226,6 +229,80 @@ module.exports = class MemberRepository {
         });
     }
 
-    async setComplimentarySubscription() {}
-    async cancelComplimentarySubscription() {}
+    async setComplimentarySubscription(data) {
+        const member = await this._Member.findOne({
+            data: data.id
+        });
+
+        const subscriptions = await member.related('stripeSubscriptions').fetch();
+
+        const activeSubscriptions = subscriptions.models.filter((subscription) => {
+            return ['active', 'trialing', 'unpaid', 'past_due'].includes(subscription.get('status'));
+        });
+
+        // NOTE: Because we allow for multiple Complimentary plans, need to take into account currently availalbe
+        //       plan currencies so that we don't end up giving a member complimentary subscription in wrong currency.
+        //       Giving member a subscription in different currency would prevent them from resubscribing with a regular
+        //       plan if Complimentary is cancelled (ref. https://stripe.com/docs/billing/customer#currency)
+        let complimentaryCurrency = this._stripePlansService.getPlans().find(plan => plan.interval === 'month').currency.toLowerCase();
+
+        if (activeSubscriptions.length) {
+            console.log(activeSubscriptions[0]);
+            complimentaryCurrency = activeSubscriptions[0].get('plan_currency').toLowerCase();
+        }
+
+        const complimentaryPlan = this._stripePlansService.getComplimentaryPlan(complimentaryCurrency);
+
+        if (!complimentaryPlan) {
+            throw new Error('Could not find Complimentary plan');
+        }
+
+        let stripeCustomer;
+
+        await member.related('stripeCustomers').fetch();
+
+        for (const customer of member.related('stripeCustomers').models) {
+            try {
+                const fetchedCustomer = await this._stripeAPIService.getCustomer(customer.get('customer_id'));
+                if (!fetchedCustomer.deleted) {
+                    stripeCustomer = fetchedCustomer;
+                    break;
+                }
+            } catch (err) {
+                console.log('Ignoring error for fetching customer for checkout');
+            }
+        }
+
+        if (!stripeCustomer) {
+            stripeCustomer = await this._stripeAPIService.createCustomer({
+                email: member.get('email')
+            });
+        }
+
+        if (!subscriptions.length) {
+            const subscription = await this._stripeAPIService.createSubscription(stripeCustomer.id, complimentaryPlan.id);
+
+            await this.linkSubscription({
+                id: member.id,
+                subscription
+            });
+        } else {
+            // NOTE: we should only ever have 1 active subscription, but just in case there is more update is done on all of them
+            for (const subscription of activeSubscriptions) {
+                const updatedSubscription = await this._stripeAPIService.changeSubscriptionPlan(
+                    subscription.id,
+                    complimentaryPlan.id
+                );
+
+                await this.linkSubscription({
+                    id: member.id,
+                    subscription: updatedSubscription
+                });
+            }
+        }
+    }
+
+    async cancelComplimentarySubscription() {
+
+    }
 };

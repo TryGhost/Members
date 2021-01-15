@@ -60,6 +60,7 @@ module.exports = function MembersApi({
 
     const memberRepository = new MemberRepository({
         stripeAPIService,
+        stripePlansService,
         Member,
         StripeCustomer,
         StripeCustomerSubscription
