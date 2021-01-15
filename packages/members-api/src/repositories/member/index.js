@@ -198,8 +198,10 @@ module.exports = class MemberRepository {
             id: data.id
         });
 
-        const subscription = await member.related('stripeSubscriptions').where({
-            subscription_id: data.subscription.subscription_id
+        const subscription = await member.related('stripeSubscriptions').query({
+            where: {
+                subscription_id: data.subscription.subscription_id
+            }
         }).fetchOne();
 
         if (!subscription) {
@@ -216,9 +218,11 @@ module.exports = class MemberRepository {
             await this._stripeAPIService.continueSubscriptionAtPeriodEnd(data.subscription.subscription_id);
         }
 
-        await this._StripeCustomerSubscription.update({
+        await this._StripeCustomerSubscription.edit({
             subscription_id: data.subscription.subscription_id,
             cancel_at_period_end: data.subscription.cancel_at_period_end
+        }, {
+            id: subscription.id
         });
     }
 
