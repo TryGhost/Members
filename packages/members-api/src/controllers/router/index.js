@@ -271,6 +271,19 @@ module.exports = class RouterController {
                 return res.end('Internal Server Error.');
             }
         };
+    },
+
+    async sendEmailWithMagicLink({ email, requestedType, tokenData, options = { forceEmailType: false }, requestSrc = '' }) {
+        let type = requestedType;
+        if (!options.forceEmailType) {
+            const member = await this._memberRepository.get({ email });
+            if (member) {
+                type = 'signin';
+            } else if (type !== 'subscribe') {
+                type = 'signup';
+            }
+        }
+        return this._magicLinkService.sendMagicLink({ email, type, requestSrc, tokenData: Object.assign({ email }, tokenData) });
     }
 
     async sendEmailWithMagicLink({ email, requestedType, tokenData, options = { forceEmailType: false }, requestSrc = '' }) {
