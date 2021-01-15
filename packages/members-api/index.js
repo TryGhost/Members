@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const {Router} = require('express');
 const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');

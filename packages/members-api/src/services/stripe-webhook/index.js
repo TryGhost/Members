@@ -177,8 +177,7 @@ module.exports = class StripeWebhookService {
                 email: customer.email
             });
 
-            const checkoutType = _.get(session, 'metadata.checkoutType');
-            const requestSrc = _.get(session, 'metadata.requestSrc') || '';
+            // const checkoutType = _.get(session, 'metadata.checkoutType');
 
             if (!member) {
                 const metadataName = _.get(session, 'metadata.name');
@@ -207,8 +206,8 @@ module.exports = class StripeWebhookService {
                 });
             }
 
-            if (checkoutType !== 'upgrade') {
-            }
+            // if (checkoutType !== 'upgrade') {
+            // }
         }
     }
 };
