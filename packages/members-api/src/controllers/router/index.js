@@ -118,14 +118,14 @@ module.exports = class RouterController {
                 });
             }
             subscriptionUpdateData.plan = plan.id;
-            this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
+            await this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
         } else if (cancelAtPeriodEnd !== undefined) {
             if (cancelAtPeriodEnd) {
-                this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
+                await this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
                     subscriptionId, cancellationReason
                 );
             } else {
-                this._stripeAPIService.continueSubscriptionAtPeriodEnd(
+                await this._stripeAPIService.continueSubscriptionAtPeriodEnd(
                     subscriptionId
                 );
             }
