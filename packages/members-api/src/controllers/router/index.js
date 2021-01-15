@@ -2,30 +2,41 @@ const common = require('../../../lib/common');
 const _ = require('lodash');
 const errors = require('ghost-ignition').errors;
 
+/**
+ * RouterController
+ *
+ * @param {object} deps
+ * @param {any} deps.memberRepository
+ * @param {boolean} deps.allowSelfSignup
+ * @param {any} deps.magicLinkService
+ * @param {any} deps.stripeAPIService
+ * @param {any} deps.stripePlanService
+ * @param {any} deps.tokenService
+ */
 module.exports = class RouterController {
     constructor({
         memberRepository,
         allowSelfSignup,
         magicLinkService,
-        stripeApiService,
-        stripePlanService,
+        stripeAPIService,
+        stripePlansService,
         tokenService
     }) {
         this._memberRepository = memberRepository;
         this._allowSelfSignup = allowSelfSignup;
         this._magicLinkService = magicLinkService;
-        this._stripeApiService = stripeApiService;
-        this._stripePlanService = stripePlanService;
+        this._stripeAPIService = stripeAPIService;
+        this._stripePlansService = stripePlansService;
         this._tokenService = tokenService;
     }
 
     async ensureStripe(_req, res, next) {
-        if (!this._stripeApiService) {
+        if (!this._stripeAPIService) {
             res.writeHead(400);
             return res.end('Stripe not configured');
         }
         try {
-            await this._stripeApiService.ready();
+            await this._stripeAPIService.ready();
             next();
         } catch (err) {
             res.writeHead(500);
@@ -96,22 +107,27 @@ module.exports = class RouterController {
         const subscriptionUpdateData = {
             id: subscriptionId
         };
-        if (cancelAtPeriodEnd !== undefined) {
-            subscriptionUpdateData.cancel_at_period_end = cancelAtPeriodEnd;
-            subscriptionUpdateData.cancellation_reason = cancellationReason;
-        }
 
         if (planName !== undefined) {
-            const plan = this._stripePlanService.getPlans().find(plan => plan.nickname === planName);
+            const plan = this._stripePlansService.getPlans().find(plan => plan.nickname === planName);
             if (!plan) {
                 throw new errors.BadRequestError({
                     message: 'Updating subscription failed! Could not find plan'
                 });
             }
             subscriptionUpdateData.plan = plan.id;
+            this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
+        } else if (cancelAtPeriodEnd !== undefined) {
+            if (cancelAtPeriodEnd) {
+                this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
+                    subscriptionId, cancellationReason
+                );
+            } else {
+                this._stripeAPIService.continueSubscriptionAtPeriodEnd(
+                    subscriptionId
+                );
+            }
         }
-
-        await this._stripeApiService.updateSubscriptionFromClient(subscriptionUpdateData);
 
         res.writeHead(204);
         res.end();
@@ -140,7 +156,7 @@ module.exports = class RouterController {
             return res.end('Bad Request.');
         }
 
-        const sessionInfo = await this._stripeApiService.createCheckoutSetupSession(member, {
+        const sessionInfo = await this._stripeAPIService.createCheckoutSetupSession(member, {
             successUrl: req.body.successUrl,
             cancelUrl: req.body.cancelUrl
         });
@@ -189,7 +205,7 @@ module.exports = class RouterController {
         }
 
         try {
-            const sessionInfo = await this._stripeApiService.createCheckoutSession(member, plan, {
+            const sessionInfo = await this._stripeAPIService.createCheckoutSession(member, plan, {
                 successUrl: req.body.successUrl,
                 cancelUrl: req.body.cancelUrl,
                 customerEmail: req.body.customerEmail,
