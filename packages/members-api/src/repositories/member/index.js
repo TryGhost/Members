@@ -172,12 +172,14 @@ module.exports = class MemberRepository {
 
         const subscription = data.subscription;
         let paymentMethodId;
-        if (typeof subscription.default_payment_method === 'string') {
+        if (!subscription.default_payment_method) {
+            paymentMethodId = null;
+        } else if (typeof subscription.default_payment_method === 'string') {
             paymentMethodId = subscription.default_payment_method;
         } else {
             paymentMethodId = subscription.default_payment_method.id;
         }
-        const paymentMethod = await this._stripeAPIService.getCardPaymentMethod(paymentMethodId);
+        const paymentMethod = paymentMethodId ? await this._stripeAPIService.getCardPaymentMethod(paymentMethodId) : null;
         await this._StripeCustomerSubscription.upsert({
             customer_id: subscription.customer,
             subscription_id: subscription.id,
@@ -243,7 +245,7 @@ module.exports = class MemberRepository {
             return;
         }
         const member = await this._Member.findOne({
-            data: data.id
+            id: data.id
         });
 
         const subscriptions = await member.related('stripeSubscriptions').fetch();
@@ -259,7 +261,6 @@ module.exports = class MemberRepository {
         let complimentaryCurrency = this._stripePlansService.getPlans().find(plan => plan.interval === 'month').currency.toLowerCase();
 
         if (activeSubscriptions.length) {
-            console.log(activeSubscriptions[0]);
             complimentaryCurrency = activeSubscriptions[0].get('plan_currency').toLowerCase();
         }
 
@@ -288,6 +289,13 @@ module.exports = class MemberRepository {
         if (!stripeCustomer) {
             stripeCustomer = await this._stripeAPIService.createCustomer({
                 email: member.get('email')
+            });
+
+            await this._StripeCustomer.upsert({
+                customer_id: stripeCustomer.id,
+                member_id: data.id,
+                email: stripeCustomer.email,
+                name: stripeCustomer.name
             });
         }
 
