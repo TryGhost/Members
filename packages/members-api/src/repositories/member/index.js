@@ -70,7 +70,7 @@ module.exports = class MemberRepository {
             'geolocation'
         ]), options);
 
-        if (member._changed.email) {
+        if (this._stripeAPIService && member._changed.email) {
             await member.related('stripeCustomers').fetch();
             const customers = member.related('stripeCustomers');
             for (const customer of customers.models) {
@@ -96,7 +96,7 @@ module.exports = class MemberRepository {
             return;
         }
 
-        if (options.cancelStripeSubscriptions) {
+        if (this._stripeAPIService && options.cancelStripeSubscriptions) {
             await member.related('stripeSubscriptions');
             const subscriptions = member.related('stripeSubscriptions');
             for (const subscription of subscriptions.models) {
@@ -126,6 +126,9 @@ module.exports = class MemberRepository {
     }
 
     async linkStripeCustomer(data) {
+        if (!this._stripeAPIService) {
+            return;
+        }
         const customer = await this._stripeAPIService.getCustomer(data.customer_id);
 
         if (!customer) {
@@ -149,6 +152,9 @@ module.exports = class MemberRepository {
     }
 
     async linkSubscription(data) {
+        if (!this._stripeAPIService) {
+            return;
+        }
         const member = await this._Member.findOne({
             id: data.id
         });
@@ -197,6 +203,9 @@ module.exports = class MemberRepository {
     }
 
     async updateSubscription(data) {
+        if (!this._stripeAPIService) {
+            return;
+        }
         const member = await this._Member.findOne({
             id: data.id
         });
@@ -230,6 +239,9 @@ module.exports = class MemberRepository {
     }
 
     async setComplimentarySubscription(data) {
+        if (!this._stripeAPIService) {
+            return;
+        }
         const member = await this._Member.findOne({
             data: data.id
         });
@@ -303,6 +315,8 @@ module.exports = class MemberRepository {
     }
 
     async cancelComplimentarySubscription() {
-
+        if (!this._stripeAPIService) {
+            return;
+        }
     }
 };

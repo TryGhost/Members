@@ -41,14 +41,14 @@ module.exports = function MembersApi({
         common.logging.setLogger(logger);
     }
 
-    console.log(paymentConfig);
+    const stripeConfig = paymentConfig && paymentConfig.stripe || {};
 
     const stripeAPIService = new StripeAPIService({
         config: {
-            secretKey: paymentConfig.stripe.secretKey,
-            publicKey: paymentConfig.stripe.publicKey,
-            appInfo: paymentConfig.stripe.appInfo,
-            enablePromoCodes: paymentConfig.stripe.enablePromoCodes
+            secretKey: stripeConfig.secretKey,
+            publicKey: stripeConfig.publicKey,
+            appInfo: stripeConfig.appInfo,
+            enablePromoCodes: stripeConfig.enablePromoCodes
         },
         logger
     });
@@ -100,12 +100,12 @@ module.exports = function MembersApi({
 
     const ready = Promise.all([
         stripePlansService.configure({
-            product: paymentConfig.stripe.product,
-            plans: paymentConfig.stripe.plans
+            product: stripeConfig.product,
+            plans: stripeConfig.plans
         }),
         stripeWebhookService.configure({
             webhookSecret: process.env.WEBHOOK_SECRET,
-            webhook: paymentConfig.stripe.webhook
+            webhook: stripeConfig.webhook
         })
     ]);
 
