@@ -46,15 +46,21 @@ module.exports = class StripeAPIService {
      * @param {boolean} params.config.enablePromoCodes
      */
     constructor({config, logger}) {
+        this.logging = logger;
+        if (config.secretKey) {
+            this.configure(config);
+        }
+    }
+
+    configure(config) {
         this._stripe = new Stripe(config.secretKey);
         this._config = config;
-        this._testMode = config.secretKey.startsWith('sk_test_');
+        this._testMode = config.secretKey && config.secretKey.startsWith('sk_test_');
         if (this._testMode) {
             this._rateLimitBucket = new LeakyBucket(EXPECTED_API_EFFICIENCY * 25, 1);
         } else {
             this._rateLimitBucket = new LeakyBucket(EXPECTED_API_EFFICIENCY * 100, 1);
         }
-        this.logging = logger;
     }
 
     /**

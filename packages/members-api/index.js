@@ -98,16 +98,17 @@ module.exports = function MembersApi({
         sendEmailWithMagicLink
     });
 
-    const ready = Promise.all([
+    const ready = paymentConfig.stripe ? Promise.all([
         stripePlansService.configure({
             product: stripeConfig.product,
             plans: stripeConfig.plans
         }),
         stripeWebhookService.configure({
             webhookSecret: process.env.WEBHOOK_SECRET,
-            webhook: stripeConfig.webhook
+            webhookHandlerUrl: stripeConfig.webhookHandlerUrl,
+            webhook: stripeConfig.webhook || {}
         })
-    ]);
+    ]) : Promise.resolve();
 
     async function hasActiveStripeSubscriptions() {
         const firstActiveSubscription = await StripeCustomerSubscription.findOne({
@@ -252,6 +253,11 @@ module.exports = function MembersApi({
     };
 
     middleware.handleStripeWebhook.use(body.raw({type: 'application/json'}), async function (req, res) {
+        if (!stripeAPIService) {
+            common.logging.error(`Stripe not configured, not handling webhook`);
+            res.writeHead(400);
+            return res.end();
+        }
         let event;
         try {
             event = stripeWebhookService.parseWebhook(req.body, req.headers['stripe-signature']);

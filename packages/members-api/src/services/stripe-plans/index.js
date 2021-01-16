@@ -66,7 +66,8 @@ module.exports = class StripeService {
 
     /**
      * @param {object} config
-     * @param {string} config.product - The name for the product
+     * @param {object} config.product - The name for the product
+     * @param {string} config.product.name - The name for the product
      *
      * @param {object[]} config.plans
      * @param {string} config.plans[].name
@@ -77,14 +78,18 @@ module.exports = class StripeService {
      * @returns {Promise<void>}
      */
     async configure(config) {
-        const product = await this._stripeAPIService.ensureProduct(config.product);
-        this._product = product;
+        try {
+            const product = await this._stripeAPIService.ensureProduct(config.product.name);
+            this._product = product;
 
-        this._plans = [];
-        for (const planSpec of config.plans) {
-            const plan = await this._stripeAPIService.ensurePlan(planSpec, product);
-            this._plans.push(plan);
+            this._plans = [];
+            for (const planSpec of config.plans) {
+                const plan = await this._stripeAPIService.ensurePlan(planSpec, product);
+                this._plans.push(plan);
+            }
+            this._configured = true;
+        } catch (err) {
+            console.log(err);
         }
-        this._configured = true;
     }
 };
