@@ -325,9 +325,34 @@ module.exports = class MemberRepository {
         }
     }
 
-    async cancelComplimentarySubscription() {
+    async cancelComplimentarySubscription(data) {
         if (!this._stripeAPIService) {
             return;
         }
+
+        const member = await this._Member.findOne({
+            id: data.id
+        });
+
+        const subscriptions = await member.related('stripeSubscriptions').fetch();
+
+        for (const subscription of subscriptions.models) {
+            if (subscription.get('status') !== 'canceled') {
+                try {
+                    const updatedSubscription = await this._stripeAPIService.cancelSubscription(
+                        subscription.get('subscription_id')
+                    );
+                    // Only needs to update `status`
+                    await this.linkSubscription({
+                        id: data.id,
+                        subscription: updatedSubscription
+                    });
+                } catch (err) {
+                    this._logging.error(`There was an error cancelling subscription ${subscription.get('subscription_id')}`);
+                    this._logging.error(err);
+                }
+            }
+        }
+        return true;
     }
 };
