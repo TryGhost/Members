@@ -97,7 +97,7 @@ module.exports = function MembersApi({
         stripeAPIService,
         stripePlansService,
         tokenService,
-        sendEmailWithMatgicLink
+        sendEmailWithMagicLink
     });
 
     const ready = paymentConfig.stripe ? Promise.all([
