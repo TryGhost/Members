@@ -6,15 +6,18 @@ module.exports = class StripeWebhookService {
      * @param {any} deps.StripeWebhook
      * @param {import('../stripe-api')} deps.stripeAPIService
      * @param {import('../../repositories/member')} deps.memberRepository
+     * @param {any} deps.sendEmailWithMagicLink
      */
     constructor({
         StripeWebhook,
         stripeAPIService,
-        memberRepository
+        memberRepository,
+        sendEmailWithMagicLink
     }) {
         this._StripeWebhook = StripeWebhook;
         this._stripeAPIService = stripeAPIService;
         this._memberRepository = memberRepository;
+        this._sendEmailWithMagicLink = sendEmailWithMagicLink;
         this.handlers = {};
         this.registerHandler('customer.subscription.deleted', this.subscriptionEvent);
         this.registerHandler('customer.subscription.updated', this.subscriptionEvent);
@@ -177,7 +180,8 @@ module.exports = class StripeWebhookService {
                 email: customer.email
             });
 
-            // const checkoutType = _.get(session, 'metadata.checkoutType');
+            const checkoutType = _.get(session, 'metadata.checkoutType');
+            const requestSrc = _.get(session, 'metadata.requestSrc') || '';
 
             if (!member) {
                 const metadataName = _.get(session, 'metadata.name');
@@ -206,8 +210,16 @@ module.exports = class StripeWebhookService {
                 });
             }
 
-            // if (checkoutType !== 'upgrade') {
-            // }
+            if (checkoutType !== 'upgrade') {
+                const emailType = 'signup';
+                this._sendEmailWithMagicLink({
+                    email: customer.email,
+                    requestedType: emailType,
+                    requestSrc,
+                    options: {forceEmailType: true},
+                    tokenData: {}
+                });
+            }
         }
     }
 };

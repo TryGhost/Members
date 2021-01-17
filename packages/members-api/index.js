@@ -69,7 +69,8 @@ module.exports = function MembersApi({
     const stripeWebhookService = new StripeWebhookService({
         StripeWebhook,
         stripeAPIService,
-        memberRepository
+        memberRepository,
+        sendEmailWithMagicLink
     });
 
     const tokenService = new TokenService({
@@ -96,7 +97,7 @@ module.exports = function MembersApi({
         stripeAPIService,
         stripePlansService,
         tokenService,
-        sendEmailWithMagicLink
+        sendEmailWithMatgicLink
     });
 
     const ready = paymentConfig.stripe ? Promise.all([
