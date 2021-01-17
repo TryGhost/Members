@@ -3,13 +3,13 @@ const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./lib/common');
 
-const StripeAPIService = require('./src/services/stripe-api');
-const StripePlansService = require('./src/services/stripe-plans');
-const StripeWebhookService = require('./src/services/stripe-webhook');
-const TokenService = require('./src/services/token');
-const GeolocationSerice = require('./src/services/geolocation');
-const MemberRepository = require('./src/repositories/member');
-const RouterController = require('./src/controllers/router');
+const StripeAPIService = require('./lib/services/stripe-api');
+const StripePlansService = require('./lib/services/stripe-plans');
+const StripeWebhookService = require('./lib/services/stripe-webhook');
+const TokenService = require('./lib/services/token');
+const GeolocationSerice = require('./lib/services/geolocation');
+const MemberRepository = require('./lib/repositories/member');
+const RouterController = require('./lib/controllers/router');
 
 module.exports = function MembersApi({
     tokenConfig: {
