@@ -7,19 +7,22 @@ module.exports = class MemberRepository {
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
      * @param {import('../../services/stripe-plans')} deps.stripePlansService
+     * @param {any} deps.logger
      */
     constructor({
         Member,
         StripeCustomer,
         StripeCustomerSubscription,
         stripeAPIService,
-        stripePlansService
+        stripePlansService,
+        logger
     }) {
         this._Member = Member;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
         this._stripePlansService = stripePlansService;
+        this._logging = logger;
     }
 
     async get(data, options) {
