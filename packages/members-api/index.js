@@ -102,7 +102,7 @@ module.exports = function MembersApi({
             checkoutSuccessUrl: stripeConfig.checkoutSuccessUrl,
             checkoutCancelUrl: stripeConfig.checkoutCancelUrl,
             billingSuccessUrl: stripeConfig.billingSuccessUrl,
-            billingCancelUrl: stripeConfig.billingCancelUrL
+            billingCancelUrl: stripeConfig.billingCancelUrl
         }
     });
 
