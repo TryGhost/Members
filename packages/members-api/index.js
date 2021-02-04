@@ -9,6 +9,7 @@ const StripeWebhookService = require('./lib/services/stripe-webhook');
 const TokenService = require('./lib/services/token');
 const GeolocationSerice = require('./lib/services/geolocation');
 const MemberRepository = require('./lib/repositories/member');
+const EventRepository = require('./lib/repositories/event');
 const RouterController = require('./lib/controllers/router');
 
 module.exports = function MembersApi({
@@ -106,6 +107,11 @@ module.exports = function MembersApi({
             billingSuccessUrl: stripeConfig.billingSuccessUrl,
             billingCancelUrl: stripeConfig.billingCancelUrl
         }
+    });
+
+    const eventRepository = new EventRepository({
+        logger,
+        MemberSubscribeEvent
     });
 
     const ready = paymentConfig.stripe ? Promise.all([
@@ -321,6 +327,7 @@ module.exports = function MembersApi({
         sendEmailWithMagicLink,
         getMagicLink,
         hasActiveStripeSubscriptions,
-        members: users
+        members: users,
+        events: eventRepository
     };
 };
