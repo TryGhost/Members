@@ -33,7 +33,8 @@ module.exports = function MembersApi({
         StripeWebhook,
         StripeCustomer,
         StripeCustomerSubscription,
-        Member
+        Member,
+        MemberSubscribeEvent
     },
     logger
 }) {
@@ -62,6 +63,7 @@ module.exports = function MembersApi({
         stripePlansService,
         logger,
         Member,
+        MemberSubscribeEvent,
         StripeCustomer,
         StripeCustomerSubscription
     });
