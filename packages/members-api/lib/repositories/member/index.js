@@ -59,10 +59,37 @@ module.exports = class MemberRepository {
 
         const memberData = _.pick(data, ['email', 'name', 'note', 'subscribed', 'geolocation', 'created_at']);
 
-        return this._Member.add({
+        const member = await this._Member.add({
             ...memberData,
             labels
         }, options);
+
+        const context = options && options.context || {};
+        let source;
+
+        if (context.internal) {
+            source = 'system';
+        } else if (context.user) {
+            source = 'admin';
+        } else {
+            source = 'member';
+        }
+
+        await this._MemberSubscribeEvent.add({
+            member_id: member.id,
+            subscribed: true,
+            source
+        }, options);
+
+        if (!member.get('subscribed')) {
+            await this._MemberSubscribeEvent.add({
+                member_id: member.id,
+                subscribed: false,
+                source
+            }, options);
+        }
+
+        return member;
     }
 
     async update(data, options) {
