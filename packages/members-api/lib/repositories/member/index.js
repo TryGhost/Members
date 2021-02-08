@@ -75,16 +75,10 @@ module.exports = class MemberRepository {
             source = 'member';
         }
 
-        await this._MemberSubscribeEvent.add({
-            member_id: member.id,
-            subscribed: true,
-            source
-        }, options);
-
-        if (!member.get('subscribed')) {
+        if (member.get('subscribed')) {
             await this._MemberSubscribeEvent.add({
                 member_id: member.id,
-                subscribed: false,
+                subscribed: true,
                 source
             }, options);
         }
