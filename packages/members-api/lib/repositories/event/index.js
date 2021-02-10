@@ -1,11 +1,3 @@
-const _ = require('lodash');
-
-function isToday(someDate) {
-    const today = new Date();
-    return someDate.getDate() === today.getDate() &&
-        someDate.getMonth() === today.getMonth() &&
-        someDate.getFullYear() === today.getFullYear();
-}
 module.exports = class EventRepository {
     constructor({
         MemberSubscribeEvent,
@@ -34,19 +26,7 @@ module.exports = class EventRepository {
                 subscribed: result.subscribed_delta + cumulativeResults[index - 1].subscribed
             }]);
         }, []);
-        const totalSubscriptions = (_.last(cumulativeResults) && _.last(cumulativeResults).subscribed) || 0;
 
-        let newToday = 0;
-        if (resultsJSON.length > 0) {
-            const lastEntry = _.last(resultsJSON);
-            newToday = isToday(new Date(lastEntry.date)) ? lastEntry.subscribed_delta : 0;
-        }
-
-        return {
-            total: totalSubscriptions,
-            total_in_range: totalSubscriptions,
-            total_on_date: cumulativeResults,
-            new_today: newToday
-        };
+        return cumulativeResults;
     }
 };
