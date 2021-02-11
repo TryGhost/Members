@@ -1,9 +1,11 @@
 module.exports = class EventRepository {
     constructor({
         MemberSubscribeEvent,
+        MemberPaidSubscriptionEvent,
         logger
     }) {
         this._MemberSubscribeEvent = MemberSubscribeEvent;
+        this._MemberPaidSubscriptionEvent = MemberPaidSubscriptionEvent;
         this._logging = logger;
     }
 
@@ -26,6 +28,41 @@ module.exports = class EventRepository {
                 subscribed: result.subscribed_delta + cumulativeResults[index - 1].subscribed
             }]);
         }, []);
+
+        return cumulativeResults;
+    }
+
+    async getMRR() {
+        const results = await this._MemberPaidSubscriptionEvent.findAll({
+            aggregateMRRDeltas: true
+        });
+
+        const resultsJSON = results.toJSON();
+
+        console.log(resultsJSON);
+
+        const cumulativeResults = resultsJSON.reduce((cumulativeResults, result) => {
+            if (!cumulativeResults[result.currency]) {
+                return {
+                    ...cumulativeResults,
+                    [result.currency]: [{
+                        date: result.date,
+                        mrr: result.mrr_delta,
+                        currency: result.currency
+                    }]
+                };
+            }
+            return {
+                ...cumulativeResults,
+                [result.currency]: cumulativeResults[result.currency].concat([{
+                    date: result.date,
+                    mrr: result.mrr_delta + cumulativeResults[result.currency].slice(-1)[0],
+                    currency: result.currency
+                }])
+            };
+        }, {});
+
+        console.log(cumulativeResults);
 
         return cumulativeResults;
     }

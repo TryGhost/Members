@@ -35,7 +35,8 @@ module.exports = function MembersApi({
         StripeCustomer,
         StripeCustomerSubscription,
         Member,
-        MemberSubscribeEvent
+        MemberSubscribeEvent,
+        MemberPaidSubscriptionEvent
     },
     logger
 }) {
@@ -111,7 +112,8 @@ module.exports = function MembersApi({
 
     const eventRepository = new EventRepository({
         logger,
-        MemberSubscribeEvent
+        MemberSubscribeEvent,
+        MemberPaidSubscriptionEvent
     });
 
     const ready = paymentConfig.stripe ? Promise.all([
@@ -312,6 +314,7 @@ module.exports = function MembersApi({
 
     ready.then(() => {
         bus.emit('ready');
+        eventRepository.getMRR();
     }).catch((err) => {
         bus.emit('error', err);
     });
