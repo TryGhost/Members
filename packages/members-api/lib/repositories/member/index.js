@@ -3,6 +3,8 @@ module.exports = class MemberRepository {
     /**
      * @param {object} deps
      * @param {any} deps.Member
+     * @param {any} deps.MemberSubscribeEvent
+     * @param {any} deps.MemberPaidSubscriptionEvent
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
@@ -12,6 +14,7 @@ module.exports = class MemberRepository {
     constructor({
         Member,
         MemberSubscribeEvent,
+        MemberPaidSubscriptionEvent,
         StripeCustomer,
         StripeCustomerSubscription,
         stripeAPIService,
@@ -20,6 +23,7 @@ module.exports = class MemberRepository {
     }) {
         this._Member = Member;
         this._MemberSubscribeEvent = MemberSubscribeEvent;
+        this._MemberPaidSubscriptionEvent = MemberPaidSubscriptionEvent;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
@@ -150,7 +154,15 @@ module.exports = class MemberRepository {
                     );
                     await this._StripeCustomerSubscription.update({
                         status: updatedSubscription.status
-                    });
+                    }, options);
+                    await this._MemberPaidSubscriptionEvent.add({
+                        member_id: member.id,
+                        source: 'stripe',
+                        from_plan: subscription.get('plan_id'),
+                        to_plan: null,
+                        currency: subscription.get('plan_currency'),
+                        mrr_delta: -1 * (subscription.get('plan_interval') === 'month' ? subscription.get('plan_amount') : subscription.get('plan_amount') / 12)
+                    }, options);
                 }
             }
         }
@@ -215,7 +227,12 @@ module.exports = class MemberRepository {
             paymentMethodId = subscription.default_payment_method.id;
         }
         const paymentMethod = paymentMethodId ? await this._stripeAPIService.getCardPaymentMethod(paymentMethodId) : null;
-        await this._StripeCustomerSubscription.upsert({
+
+        const model = await this._StripeCustomerSubscription.findOne({
+            subscription_id: subscription.id
+        }, options);
+
+        const subscriptionData = {
             customer_id: subscription.customer,
             subscription_id: subscription.id,
             status: subscription.status,
@@ -234,10 +251,58 @@ module.exports = class MemberRepository {
             plan_interval: subscription.plan.interval,
             plan_amount: subscription.plan.amount,
             plan_currency: subscription.plan.currency
-        }, {
-            ...options,
-            subscription_id: subscription.id
-        });
+        };
+
+        function getMRRDelta({interval, amount, status}) {
+            if (status === 'trialing') {
+                return 0;
+            }
+            if (status === 'incomplete') {
+                return 0;
+            }
+            if (status === 'incomplete_expired') {
+                return 0;
+            }
+            const modifier = status === 'canceled' ? -1 : 1;
+
+            if (interval === 'year') {
+                return modifier * (amount / 12);
+            }
+
+            if (interval === 'month') {
+                return modifier * amount;
+            }
+        }
+        if (model) {
+            const updated = await this._StripeCustomerSubscription.edit(subscriptionData, {
+                ...options,
+                id: model.id
+            });
+
+            if (model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status')) {
+                const originalMrrDelta = getMRRDelta({interval: model.get('plan_interval'), amount: model.get('plan_amount'), status: model.get('status')});
+                const updatedMrrDelta = getMRRDelta({interval: updated.get('plan_interval'), amount: updated.get('plan_amount'), status: updated.get('status')});
+                const mrrDelta = updatedMrrDelta - originalMrrDelta;
+                await this._MemberPaidSubscriptionEvent.add({
+                    member_id: member.id,
+                    source: 'stripe',
+                    from_plan: model.get('plan_id'),
+                    to_plan: updated.get('plan_id'),
+                    currency: subscription.plan.currency,
+                    mrr_delta: mrrDelta
+                });
+            }
+        } else {
+            await this._StripeCustomerSubscription.add(subscriptionData, options);
+            await this._MemberPaidSubscriptionEvent.add({
+                member_id: member.id,
+                source: 'stripe',
+                from_plan: null,
+                to_plan: subscription.plan.id,
+                currency: subscription.plan.currency,
+                mrr_delta: getMRRDelta({interval: subscription.plan.interval, amount: subscription.plan.amount, status: subscription.status})
+            });
+        }
 
         if (this.isActiveSubscriptionStatus(subscription.status)) {
             await this._Member.edit({status: 'paid'}, {...options, id: data.id});
