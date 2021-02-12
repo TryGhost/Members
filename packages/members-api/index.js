@@ -69,6 +69,7 @@ module.exports = function MembersApi({
         stripePlansService,
         logger,
         Member,
+        MemberSubscribeEvent,
         StripeCustomer,
         StripeCustomerSubscription
     });

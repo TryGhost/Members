@@ -3,6 +3,7 @@ module.exports = class MemberRepository {
     /**
      * @param {object} deps
      * @param {any} deps.Member
+     * @param {any} deps.MemberSubscribeEvent
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
@@ -11,6 +12,7 @@ module.exports = class MemberRepository {
      */
     constructor({
         Member,
+        MemberSubscribeEvent,
         StripeCustomer,
         StripeCustomerSubscription,
         stripeAPIService,
@@ -18,6 +20,7 @@ module.exports = class MemberRepository {
         logger
     }) {
         this._Member = Member;
+        this._MemberSubscribeEvent = MemberSubscribeEvent;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
@@ -57,10 +60,31 @@ module.exports = class MemberRepository {
 
         const memberData = _.pick(data, ['email', 'name', 'note', 'subscribed', 'geolocation', 'created_at']);
 
-        return this._Member.add({
+        const member = await this._Member.add({
             ...memberData,
             labels
         }, options);
+
+        const context = options && options.context || {};
+        let source;
+
+        if (context.internal) {
+            source = 'system';
+        } else if (context.user) {
+            source = 'admin';
+        } else {
+            source = 'member';
+        }
+
+        if (member.get('subscribed')) {
+            await this._MemberSubscribeEvent.add({
+                member_id: member.id,
+                subscribed: true,
+                source
+            }, options);
+        }
+
+        return member;
     }
 
     async update(data, options) {
@@ -72,6 +96,24 @@ module.exports = class MemberRepository {
             'labels',
             'geolocation'
         ]), options);
+
+        // member._changed.subscribed has a value if the `subscribed` attribute is passed in the update call, regardless of the previous value
+        if (member.attributes.subscribed !== member._previousAttributes.subscribed) {
+            const context = options && options.context || {};
+            let source;
+            if (context.internal) {
+                source = 'system';
+            } else if (context.user) {
+                source = 'admin';
+            } else {
+                source = 'member';
+            }
+            await this._MemberSubscribeEvent.add({
+                member_id: member.id,
+                subscribed: member.get('subscribed'),
+                source
+            }, options);
+        }
 
         if (this._stripeAPIService && member._changed.email) {
             await member.related('stripeCustomers').fetch();
