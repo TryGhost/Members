@@ -200,6 +200,7 @@ module.exports = function MembersApi({
         const member = oldEmail ? await getMemberIdentityData(oldEmail) : await getMemberIdentityData(email);
 
         if (member) {
+            await MemberLoginEvent.add({member_id: member.id});
             if (oldEmail) {
                 // user exists but wants to change their email address
                 if (oldEmail) {
@@ -211,7 +212,8 @@ module.exports = function MembersApi({
             return member;
         }
 
-        await users.create({name, email, labels});
+        const newMember = await users.create({name, email, labels});
+        await MemberLoginEvent.add({member_id: newMember.id});
         return getMemberIdentityData(email);
     }
 
