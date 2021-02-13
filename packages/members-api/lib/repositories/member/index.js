@@ -6,6 +6,7 @@ module.exports = class MemberRepository {
      * @param {any} deps.MemberSubscribeEvent
      * @param {any} deps.MemberEmailChangeEvent
      * @param {any} deps.MemberPaidSubscriptionEvent
+     * @param {any} deps.MemberStatusEvent
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
@@ -17,6 +18,7 @@ module.exports = class MemberRepository {
         MemberSubscribeEvent,
         MemberEmailChangeEvent,
         MemberPaidSubscriptionEvent,
+        MemberStatusEvent,
         StripeCustomer,
         StripeCustomerSubscription,
         stripeAPIService,
@@ -27,6 +29,7 @@ module.exports = class MemberRepository {
         this._MemberSubscribeEvent = MemberSubscribeEvent;
         this._MemberEmailChangeEvent = MemberEmailChangeEvent;
         this._MemberPaidSubscriptionEvent = MemberPaidSubscriptionEvent;
+        this._MemberStatusEvent = MemberStatusEvent;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
@@ -36,6 +39,10 @@ module.exports = class MemberRepository {
 
     isActiveSubscriptionStatus(status) {
         return ['active', 'trialing', 'unpaid', 'past_due'].includes(status);
+    }
+
+    isComplimentarySubscription(subscription) {
+        return subscription.plan.nickname.toLowerCase() === 'complimentary';
     }
 
     async get(data, options) {
@@ -89,6 +96,12 @@ module.exports = class MemberRepository {
                 source
             }, options);
         }
+
+        await this._MemberStatusEvent.add({
+            member_id: data.id,
+            from_status: null,
+            to_status: member.get('status')
+        }, options);
 
         return member;
     }
@@ -324,18 +337,32 @@ module.exports = class MemberRepository {
             });
         }
 
+        let status = 'free';
         if (this.isActiveSubscriptionStatus(subscription.status)) {
-            await this._Member.edit({status: 'paid'}, {...options, id: data.id});
+            if (this.isComplimentarySubscription(subscription)) {
+                status = 'comped';
+            } else {
+                status = 'paid';
+            }
         } else {
             const subscriptions = await member.related('stripeSubscriptions').fetch(options);
-            let status = 'free';
             for (const subscription of subscriptions.models) {
                 if (this.isActiveSubscriptionStatus(subscription.get('status'))) {
-                    status = 'paid';
-                    break;
+                    if (status === 'comped' || this.isComplimentarySubscription(subscription)) {
+                        status = 'comped';
+                    } else {
+                        status = 'paid';
+                    }
                 }
             }
-            await this._Member.edit({status: status}, {...options, id: data.id});
+        }
+        const updatedMember = await this._Member.edit({status: status}, {...options, id: data.id});
+        if (updatedMember.attributes.status !== updatedMember._previousAttributes.status) {
+            await this._MemberStatusEvent.add({
+                member_id: data.id,
+                from_status: updatedMember._previousAttributes.status,
+                to_status: updatedMember.get('status')
+            }, options);
         }
     }
 
@@ -455,6 +482,11 @@ module.exports = class MemberRepository {
                 }, options);
             }
         }
+
+        await this.update({status: 'comped'}, {
+            ...options,
+            id: member.id
+        });
     }
 
     async cancelComplimentarySubscription(data) {
@@ -485,6 +517,8 @@ module.exports = class MemberRepository {
                 }
             }
         }
+
+        await this.update({status: 'free'}, {id: data.id});
         return true;
     }
 };
