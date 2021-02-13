@@ -70,6 +70,7 @@ module.exports = function MembersApi({
         logger,
         Member,
         MemberSubscribeEvent,
+        MemberPaidSubscriptionEvent,
         MemberEmailChangeEvent,
         StripeCustomer,
         StripeCustomerSubscription
