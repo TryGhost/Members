@@ -89,6 +89,7 @@ module.exports = function MembersApi({
         StripeWebhook,
         stripeAPIService,
         memberRepository,
+        eventRepository,
         sendEmailWithMagicLink
     });
 
