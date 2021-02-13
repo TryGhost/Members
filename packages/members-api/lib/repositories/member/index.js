@@ -4,6 +4,7 @@ module.exports = class MemberRepository {
      * @param {object} deps
      * @param {any} deps.Member
      * @param {any} deps.MemberSubscribeEvent
+     * @param {any} deps.MemberEmailChangeEvent
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
@@ -13,6 +14,7 @@ module.exports = class MemberRepository {
     constructor({
         Member,
         MemberSubscribeEvent,
+        MemberEmailChangeEvent,
         StripeCustomer,
         StripeCustomerSubscription,
         stripeAPIService,
@@ -21,6 +23,7 @@ module.exports = class MemberRepository {
     }) {
         this._Member = Member;
         this._MemberSubscribeEvent = MemberSubscribeEvent;
+        this._MemberEmailChangeEvent = MemberEmailChangeEvent;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._stripeAPIService = stripeAPIService;
@@ -113,6 +116,14 @@ module.exports = class MemberRepository {
                 subscribed: member.get('subscribed'),
                 source
             }, options);
+        }
+
+        if (member.attributes.email !== member._previousAttributes.email) {
+            await this._MemberEmailChangeEvent.add({
+                member_id: member.id,
+                from_email: member._previousAttributes.email,
+                to_email: member.get('email')
+            });
         }
 
         if (this._stripeAPIService && member._changed.email) {
