@@ -482,11 +482,6 @@ module.exports = class MemberRepository {
                 }, options);
             }
         }
-
-        await this.update({status: 'comped'}, {
-            ...options,
-            id: member.id
-        });
     }
 
     async cancelComplimentarySubscription(data) {
@@ -517,8 +512,6 @@ module.exports = class MemberRepository {
                 }
             }
         }
-
-        await this.update({status: 'free'}, {id: data.id});
         return true;
     }
 };
