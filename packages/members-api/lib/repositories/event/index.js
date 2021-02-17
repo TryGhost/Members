@@ -104,7 +104,7 @@ module.exports = class EventRepository {
         const allEvents = allEventPages.reduce((allEvents, page) => allEvents.concat(page.data), []);
 
         return allEvents.sort((a, b) => {
-            return new Date(a.data.created_at) - new Date(b.data.created_at);
+            return new Date(b.data.created_at) - new Date(a.data.created_at);
         }).slice(0, options.limit);
     }
 
