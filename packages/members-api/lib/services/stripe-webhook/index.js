@@ -157,6 +157,18 @@ module.exports = class StripeWebhookService {
                 setupIntent.payment_method
             );
 
+            if (setupIntent.metadata.subscription_id) {
+                const updatedSubscription = await this._stripeAPIService.updateSubscriptionDefaultPaymentMethod(
+                    setupIntent.metadata.subscription_id,
+                    setupIntent.payment_method
+                );
+                await this._memberRepository.linkSubscription({
+                    id: member.id,
+                    subscription: updatedSubscription
+                });
+                return;
+            }
+
             const subscriptions = await member.related('stripeSubscriptions').fetch();
 
             const activeSubscriptions = subscriptions.models.filter((subscription) => {
