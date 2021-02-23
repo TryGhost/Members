@@ -159,7 +159,11 @@ module.exports = class StripeWebhookService {
 
             const subscriptions = await member.related('stripeSubscriptions').fetch();
 
-            for (const subscription of subscriptions.models) {
+            const activeSubscriptions = subscriptions.models.filter((subscription) => {
+                return ['active', 'trialing', 'unpaid', 'past_due'].includes(subscription.get('status'));
+            });
+
+            for (const subscription of activeSubscriptions) {
                 const updatedSubscription = await this._stripeAPIService.updateSubscriptionDefaultPaymentMethod(
                     subscription.get('subscription_id'),
                     setupIntent.payment_method
