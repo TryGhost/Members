@@ -164,14 +164,16 @@ module.exports = class StripeWebhookService {
             });
 
             for (const subscription of activeSubscriptions) {
-                const updatedSubscription = await this._stripeAPIService.updateSubscriptionDefaultPaymentMethod(
-                    subscription.get('subscription_id'),
-                    setupIntent.payment_method
-                );
-                await this._memberRepository.linkSubscription({
-                    id: member.id,
-                    subscription: updatedSubscription
-                });
+                if (subscription.get('customer_id') === setupIntent.metadata.customer_id) {
+                    const updatedSubscription = await this._stripeAPIService.updateSubscriptionDefaultPaymentMethod(
+                        subscription.get('subscription_id'),
+                        setupIntent.payment_method
+                    );
+                    await this._memberRepository.linkSubscription({
+                        id: member.id,
+                        subscription: updatedSubscription
+                    });
+                }
             }
         }
 
