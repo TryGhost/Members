@@ -96,15 +96,17 @@ module.exports = class MemberRepository {
         }
 
         if (this._stripeAPIService && options.cancelStripeSubscriptions) {
-            await member.related('stripeSubscriptions');
+            await member.related('stripeSubscriptions').fetch();
             const subscriptions = member.related('stripeSubscriptions');
             for (const subscription of subscriptions.models) {
                 if (subscription.get('status') !== 'canceled') {
                     const updatedSubscription = await this._stripeAPIService.cancelSubscription(
                         subscription.get('subscription_id')
                     );
-                    await this._StripeCustomerSubscription.update({
+                    await this._StripeCustomerSubscription.upsert({
                         status: updatedSubscription.status
+                    }, {
+                        subscription_id: updatedSubscription.id
                     });
                 }
             }
