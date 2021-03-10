@@ -118,6 +118,14 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
+"@tryghost/errors@^0.2.9":
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.9.tgz#b27fb31633735975ce62e53e88bc2412dc6fd876"
+  integrity sha512-ULWfgTYqSO2uU9Sb75+MQpuYsy3sCF5QTXy5RqpzJdACWKW2Mtg3fPGS6fVEHuxbUhOxEhq1eu9gsWFWLljTEA==
+  dependencies:
+    ghost-ignition "4.4.4"
+    lodash "4.17.20"
+
 "@types/body-parser@*":
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.0.tgz#0685b3c47eb3006ffed117cdd55164b61f80538f"
