@@ -223,6 +223,11 @@ module.exports = class RouterController {
 
         const plan = this._stripePlansService.getPlan(planName);
 
+        if (!plan) {
+            res.writeHead(400);
+            return res.end('Bad Request.');
+        }
+
         let email;
         try {
             if (!identity) {
