@@ -5,19 +5,16 @@ const errors = require('ghost-ignition').errors;
  *
  * @param {object} deps
  * @param {any} deps.memberRepository
- * @param {any} deps.stripeAPIService
  * @param {any} deps.stripePlansService
  * @param {any} deps.tokenService
  */
 module.exports = class MemberController {
     constructor({
         memberRepository,
-        stripeAPIService,
         stripePlansService,
         tokenService
     }) {
         this._memberRepository = memberRepository;
-        this._stripeAPIService = stripeAPIService;
         this._stripePlansService = stripePlansService;
         this._tokenService = tokenService;
     }
@@ -66,24 +63,12 @@ module.exports = class MemberController {
                 return res.end('Unauthorized');
             }
 
-            const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeSubscriptions']}) : null;
-
-            if (!member) {
+            if (!email) {
                 throw new errors.BadRequestError({
-                    message: 'Updating subscription failed! Could not find member'
+                    message: 'Invalid token'
                 });
             }
 
-            // Don't allow removing subscriptions that don't belong to the member
-            const subscription = member.related('stripeSubscriptions').models.find(
-                subscription => subscription.get('subscription_id') === subscriptionId
-            );
-            if (!subscription) {
-                res.writeHead(403);
-                return res.end('No permission');
-            }
-
-            let updatedSubscription;
             if (planName !== undefined) {
                 const plan = this._stripePlansService.getPlan(planName);
                 if (!plan) {
@@ -91,22 +76,21 @@ module.exports = class MemberController {
                         message: 'Updating subscription failed! Could not find plan'
                     });
                 }
-                updatedSubscription = await this._stripeAPIService.changeSubscriptionPlan(subscriptionId, plan.id);
+                await this._memberRepository.updateSubscription({
+                    email,
+                    subscription: {
+                        subscription_id: subscriptionId,
+                        plan: plan.id
+                    }
+                });
             } else if (cancelAtPeriodEnd !== undefined) {
-                if (cancelAtPeriodEnd) {
-                    updatedSubscription = await this._stripeAPIService.cancelSubscriptionAtPeriodEnd(
-                        subscriptionId, cancellationReason
-                    );
-                } else {
-                    updatedSubscription = await this._stripeAPIService.continueSubscriptionAtPeriodEnd(
-                        subscriptionId
-                    );
-                }
-            }
-            if (updatedSubscription) {
-                await this._memberRepository.linkSubscription({
-                    id: member.id,
-                    subscription: updatedSubscription
+                await this._memberRepository.updateSubscription({
+                    email,
+                    subscription: {
+                        subscription_id: subscriptionId,
+                        cancel_at_period_end: cancelAtPeriodEnd,
+                        cancellationReason
+                    }
                 });
             }
 
