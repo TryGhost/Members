@@ -85,7 +85,7 @@ module.exports = class MemberController {
 
             let updatedSubscription;
             if (planName !== undefined) {
-                const plan = this._stripePlansService.getPlans().find(plan => plan.nickname === planName);
+                const plan = this._stripePlansService.getPlan(planName);
                 if (!plan) {
                     throw new errors.BadRequestError({
                         message: 'Updating subscription failed! Could not find plan'
