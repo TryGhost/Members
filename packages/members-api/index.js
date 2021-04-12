@@ -156,7 +156,7 @@ module.exports = function MembersApi({
             plans: stripeConfig.plans,
             mode: process.env.NODE_ENV || 'development'
         }),
-        stripeMigrations.populateProductsAndPrices();
+        stripeMigrations.populateProductsAndPrices(),
         stripeWebhookService.configure({
             webhookSecret: process.env.WEBHOOK_SECRET,
             webhookHandlerUrl: stripeConfig.webhookHandlerUrl,

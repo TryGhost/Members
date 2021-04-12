@@ -1,24 +1,11 @@
 const _ = require('lodash');
 
 /**
- * @typedef {import('stripe').Stripe.Customer} ICustomer
- * @typedef {import('stripe').Stripe.Product} IProduct
- * @typedef {import('stripe').Stripe.Plan} IPlan
- * @typedef {import('stripe').Stripe.Price} IPrice
- * @typedef {import('stripe').Stripe.WebhookEndpoint} IWebhookEndpoint
- */
-
-/**
  * @typedef {object} ILogger
  * @prop {(x: any) => void} error
  * @prop {(x: any) => void} info
  * @prop {(x: any) => void} warn
  */
-
-/**
- * @typedef {'customers'|'subscriptions'|'plans'} StripeResource
- */
-
 module.exports = class StripeMigrations {
     /**
      * StripeMigrations
@@ -32,8 +19,15 @@ module.exports = class StripeMigrations {
      * @param {any} params.Product
      * @param {any} params.stripeAPIService
      */
-    constructor({logger, StripeCustomerSubscription, StripeProduct, StripePrice, Product, stripeAPIService}) {
-        this.logging = logger;
+    constructor({
+        StripeCustomerSubscription,
+        StripeProduct,
+        StripePrice,
+        Product,
+        stripeAPIService,
+        logger
+    }) {
+        this._logging = logger;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
         this._StripeProduct = StripeProduct;
         this._StripePrice = StripePrice;
@@ -62,7 +56,7 @@ module.exports = class StripeMigrations {
             const uniquePlans = _.uniq(subscriptions.map(d => _.get(d, 'plan.id')));
 
             let stripePlans = [];
-
+            this._logging.info(`Adding ${uniquePlans.length} plans from Stripe`);
             for (const plan of uniquePlans) {
                 const stripePlan = await this._StripeAPIService.getPlan(plan, {
                     expand: ['product']
