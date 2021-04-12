@@ -46,6 +46,8 @@ module.exports = class StripeAPIService {
      * @param {boolean} params.config.enablePromoCodes
      */
     constructor({config, logger}) {
+        /** @type {Stripe} */
+        this._stripe = null;
         this.logging = logger;
         this._configured = false;
         if (config.secretKey) {
