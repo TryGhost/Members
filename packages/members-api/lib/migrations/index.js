@@ -52,34 +52,41 @@ module.exports = class StripeMigrations {
          * No rows in stripe_prices,
          * One or more rows in members_stripe_customers_subscriptions
          * */
-        if (subscriptions.length > 0 && products.length === 0 && prices.length === 0) {
-            const uniquePlans = _.uniq(subscriptions.map(d => _.get(d, 'plan.id')));
+        if (subscriptions.length > 0 && products.length === 0 && prices.length === 0 && defaultProduct) {
+            try {
+                this._logging.info(`Populating products and prices for existing stripe customers`);
+                const uniquePlans = _.uniq(subscriptions.map(d => _.get(d, 'plan.id')));
 
-            let stripePlans = [];
-            this._logging.info(`Adding ${uniquePlans.length} plans from Stripe`);
-            for (const plan of uniquePlans) {
-                const stripePlan = await this._StripeAPIService.getPlan(plan, {
-                    expand: ['product']
-                });
-                const stripeProduct = stripePlan.product;
+                let stripePlans = [];
+                for (const plan of uniquePlans) {
+                    const stripePlan = await this._StripeAPIService.getPlan(plan, {
+                        expand: ['product']
+                    });
+                    stripePlans.push(stripePlan);
+                }
+                this._logging.info(`Adding ${stripePlans.length} plans from Stripe`);
+                for (const stripePlan of stripePlans) {
+                    const stripeProduct = stripePlan.product;
 
-                await this._StripeProduct.upsert({
-                    product_id: defaultProduct.id,
-                    stripe_product_id: stripeProduct.id
-                });
+                    await this._StripeProduct.upsert({
+                        product_id: defaultProduct.id,
+                        stripe_product_id: stripeProduct.id
+                    });
 
-                await this._StripePrice.add({
-                    stripe_price_id: stripePlan.id,
-                    stripe_product_id: stripeProduct.id,
-                    active: stripePlan.active,
-                    nickname: stripePlan.nickname,
-                    currency: stripePlan.currency,
-                    amount: stripePlan.amount,
-                    type: 'recurring',
-                    interval: stripePlan.interval
-                });
-
-                stripePlans.push(stripePlan);
+                    await this._StripePrice.add({
+                        stripe_price_id: stripePlan.id,
+                        stripe_product_id: stripeProduct.id,
+                        active: stripePlan.active,
+                        nickname: stripePlan.nickname,
+                        currency: stripePlan.currency,
+                        amount: stripePlan.amount,
+                        type: 'recurring',
+                        interval: stripePlan.interval
+                    });
+                }
+            } catch (e) {
+                this._logging.error(`Failed to populate products/prices from stripe`);
+                this._logging.error(e);
             }
         }
     }
