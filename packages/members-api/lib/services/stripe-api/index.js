@@ -78,6 +78,38 @@ module.exports = class StripeAPIService {
     }
 
     /**
+     * @param {object} options
+     * @param {string} options.name
+     *
+     * @returns {Promise<IProduct>}
+     */
+    async createProduct(options) {
+        await this._rateLimitBucket.throttle();
+        const product = await this._stripe.products.create(options);
+
+        return product;
+    }
+
+    /**
+     * @param {object} options
+     * @param {string} options.product
+     * @param {boolean} options.active
+     * @param {string} options.nickname
+     * @param {string} options.currency
+     * @param {number} options.amount
+     * @param {'recurring'|'one-time'} options.type
+     * @param {string|null} options.interval
+     *
+     * @returns {Promise<IPrice>}
+     */
+    async createPrice(options){
+        await this._rateLimitBucket.throttle();
+        const price = await this._stripe.prices.create(options);
+
+        return price;
+    }
+
+    /**
      * ensureProduct.
      *
      * @param {string} name
