@@ -4,7 +4,8 @@
   "repository": "https://github.com/TryGhost/Members/tree/master/packages/product-repository",
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "ProductRespository.js",
+  "main": "ProductRepository.js",
+  "types": "types/ProductRepository.d.ts",
   "scripts": {
     "test": "NODE_ENV=testing mocha './test/**/*.test.js'",
     "lint": "eslint . --ext .js --cache",
