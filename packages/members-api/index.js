@@ -3,6 +3,8 @@ const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./lib/common');
 
+const ProductRepository = require('@tryghost/product-repository');
+
 const StripeAPIService = require('./lib/services/stripe-api');
 const StripePlansService = require('./lib/services/stripe-plans');
 const StripeWebhookService = require('./lib/services/stripe-webhook');
@@ -75,6 +77,13 @@ module.exports = function MembersApi({
     });
 
     const stripePlansService = new StripePlansService({
+        stripeAPIService
+    });
+
+    const productRepository = new ProductRepository({
+        Product,
+        StripeProduct,
+        StripePrice,
         stripeAPIService
     });
 
@@ -367,6 +376,7 @@ module.exports = function MembersApi({
         getMagicLink,
         hasActiveStripeSubscriptions,
         members: users,
-        events: eventRepository
+        events: eventRepository,
+        productRepository
     };
 };
