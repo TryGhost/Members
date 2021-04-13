@@ -98,13 +98,22 @@ module.exports = class StripeAPIService {
      * @param {string} options.currency
      * @param {number} options.amount
      * @param {'recurring'|'one-time'} options.type
-     * @param {string|null} options.interval
+     * @param {Stripe.Price.Recurring.Interval|null} options.interval
      *
      * @returns {Promise<IPrice>}
      */
-    async createPrice(options){
+    async createPrice(options) {
         await this._rateLimitBucket.throttle();
-        const price = await this._stripe.prices.create(options);
+        const price = await this._stripe.prices.create({
+            currency: options.currency,
+            product: options.product,
+            unit_amount: options.amount,
+            active: options.active,
+            nickname: options.nickname,
+            recurring: options.type === 'recurring' ? {
+                interval: options.interval
+            } : undefined
+        });
 
         return price;
     }
