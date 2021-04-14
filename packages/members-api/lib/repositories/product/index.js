@@ -36,7 +36,7 @@ class ProductRepository {
     /**
      * Retrieves a Product by either stripe_product_id, stripe_price_id, id or slug
      *
-     * @param {{stripe_product_id: string} | {stripe_price_id: string} | {id: string} | {slug: string}} data
+     * @param {{stripe_product_id: string} | {stripe_price_id: string} | {id: string} | {slug: string} | {limit: number}} data
      * @param {object} options
      *
      * @returns {Promise<ProductModel>}
@@ -80,7 +80,14 @@ class ProductRepository {
             return await this._Product.findOne({slug: data.slug}, options);
         }
 
-        throw new Error('Missing id, slug, stripe_product_id or stripe_price_id from data');
+        if ('limit' in data) {
+            const {data: pageData} = await this._Product.findPage({
+                limit: data.limit
+            }, options);
+            return (pageData && pageData[0]) || null;
+        }
+
+        throw new Error('Missing id, slug, stripe_product_id, stripe_price_id or limit from data');
     }
 
     /**
@@ -89,12 +96,27 @@ class ProductRepository {
      * @param {object} data
      * @param {string} data.name
      * @param {StripePriceInput[]} data.stripe_prices
+     * @param {string} data.product_id
+     * @param {string} data.stripe_product_id
      *
      * @param {object} options
      *
      * @returns {Promise<ProductModel>}
      **/
     async create(data, options) {
+        if (data.product_id && data.stripe_product_id && this._stripeAPIService.configured) {
+            const product = await this._Product.findOne({id: data.product_id}, options);
+            if (product) {
+                await this._StripeProduct.add({
+                    product_id: product.get('id'),
+                    stripe_product_id: data.stripe_product_id
+                }, options);
+                await product.related('stripePrices').fetch(options);
+                return product;
+            } else {
+                throw new Error(`Could not find any Product matching ${data.product_id}`);
+            }
+        }
         const productData = {
             name: data.name
         };

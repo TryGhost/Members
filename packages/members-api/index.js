@@ -90,13 +90,15 @@ module.exports = function MembersApi({
         stripeAPIService,
         stripePlansService,
         logger,
+        productRepository,
         Member,
         MemberSubscribeEvent,
         MemberPaidSubscriptionEvent,
         MemberEmailChangeEvent,
         MemberStatusEvent,
         StripeCustomer,
-        StripeCustomerSubscription
+        StripeCustomerSubscription,
+        StripePrice
     });
 
     const eventRepository = new EventRepository({

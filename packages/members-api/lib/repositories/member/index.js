@@ -9,6 +9,8 @@ module.exports = class MemberRepository {
      * @param {any} deps.MemberStatusEvent
      * @param {any} deps.StripeCustomer
      * @param {any} deps.StripeCustomerSubscription
+     * @param {any} deps.StripePrice
+     * @param {any} deps.productRepository
      * @param {import('../../services/stripe-api')} deps.stripeAPIService
      * @param {import('../../services/stripe-plans')} deps.stripePlansService
      * @param {any} deps.logger
@@ -21,8 +23,10 @@ module.exports = class MemberRepository {
         MemberStatusEvent,
         StripeCustomer,
         StripeCustomerSubscription,
+        StripePrice,
         stripeAPIService,
         stripePlansService,
+        productRepository,
         logger
     }) {
         this._Member = Member;
@@ -32,8 +36,10 @@ module.exports = class MemberRepository {
         this._MemberStatusEvent = MemberStatusEvent;
         this._StripeCustomer = StripeCustomer;
         this._StripeCustomerSubscription = StripeCustomerSubscription;
+        this._StripePrice = StripePrice;
         this._stripeAPIService = stripeAPIService;
         this._stripePlansService = stripePlansService;
+        this._productRepository = productRepository;
         this._logging = logger;
     }
 
@@ -268,6 +274,46 @@ module.exports = class MemberRepository {
         const model = await this._StripeCustomerSubscription.findOne({
             subscription_id: subscription.id
         }, options);
+        const subscriptionPriceData = _.get(subscription, 'items.data[0].price');
+        let ghostProduct;
+        try {
+            ghostProduct = await this._productRepository.get({stripe_product_id: subscriptionPriceData.product}, options);
+
+            // Use first Ghost product as default product in case of missing link
+            let defaultGhostProduct = await this._productRepository.get({limit: 1}, options);
+
+            // Log error if now Ghost products found
+            if (!ghostProduct && !defaultGhostProduct) {
+                this._logging.error(`There was an error linking subscription - ${subscription.id}, no Products exist.`);
+            }
+
+            // Add missing stripe product to DB linking to first Ghost Product
+            if (!ghostProduct && defaultGhostProduct) {
+                ghostProduct = defaultGhostProduct;
+                await this._productRepository.create({
+                    product_id: ghostProduct.get('id'),
+                    stripe_product_id: subscriptionPriceData.product
+                });
+            }
+            const hasStripePrice = await this._StripePrice.findOne({stripe_price_id: subscriptionPriceData.id}, options);
+
+            // Add missing stripe price to DB
+            if (ghostProduct && !hasStripePrice) {
+                await this._StripePrice.add({
+                    stripe_price_id: subscriptionPriceData.id,
+                    stripe_product_id: subscriptionPriceData.product,
+                    active: subscriptionPriceData.active,
+                    nickname: subscriptionPriceData.nickname,
+                    currency: subscriptionPriceData.currency,
+                    amount: subscriptionPriceData.unit_amount,
+                    type: subscriptionPriceData.type,
+                    interval: (subscriptionPriceData.recurring && subscriptionPriceData.recurring.interval)
+                });
+            }
+        } catch (e) {
+            this._logging.error(`Failed to populate prices and product for - ${subscription.id}.`);
+            this._logging.error(e);
+        }
 
         const subscriptionData = {
             customer_id: subscription.customer,
@@ -278,18 +324,17 @@ module.exports = class MemberRepository {
             current_period_end: new Date(subscription.current_period_end * 1000),
             start_date: new Date(subscription.start_date * 1000),
             default_payment_card_last4: paymentMethod && paymentMethod.card && paymentMethod.card.last4 || null,
-
-            plan_id: subscription.plan.id,
+            stripe_price_id: subscriptionPriceData.id,
+            plan_id: subscriptionPriceData.id,
             // NOTE: Defaulting to interval as migration to nullable field
             // turned out to be much bigger problem.
             // Ideally, would need nickname field to be nullable on the DB level
             // condition can be simplified once this is done
-            plan_nickname: subscription.plan.nickname || subscription.plan.interval,
-            plan_interval: subscription.plan.interval,
-            plan_amount: subscription.plan.amount,
-            plan_currency: subscription.plan.currency
+            plan_nickname: subscriptionPriceData.nickname || _.get(subscriptionPriceData, 'recurring.interval'),
+            plan_interval: _.get(subscriptionPriceData, 'recurring.interval', ''),
+            plan_amount: subscriptionPriceData.unit_amount,
+            plan_currency: subscriptionPriceData.currency
         };
-
         function getMRRDelta({interval, amount, status}) {
             if (status === 'trialing') {
                 return 0;
@@ -327,7 +372,7 @@ module.exports = class MemberRepository {
                     source: 'stripe',
                     from_plan: model.get('plan_id'),
                     to_plan: updated.get('plan_id'),
-                    currency: subscription.plan.currency,
+                    currency: subscriptionPriceData.currency,
                     mrr_delta: mrrDelta
                 }, options);
             }
@@ -337,24 +382,46 @@ module.exports = class MemberRepository {
                 member_id: member.id,
                 source: 'stripe',
                 from_plan: null,
-                to_plan: subscription.plan.id,
-                currency: subscription.plan.currency,
-                mrr_delta: getMRRDelta({interval: subscription.plan.interval, amount: subscription.plan.amount, status: subscription.status})
+                to_plan: subscriptionPriceData.id,
+                currency: subscriptionPriceData.currency,
+                mrr_delta: getMRRDelta({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status})
             }, options);
         }
 
         let status = 'free';
+        let memberProducts = [];
         if (this.isActiveSubscriptionStatus(subscription.status)) {
             if (this.isComplimentarySubscription(subscription)) {
                 status = 'comped';
             } else {
                 status = 'paid';
             }
+            try {
+                if (ghostProduct) {
+                    memberProducts.push(ghostProduct.toJSON());
+                }
+                const existingProducts = await member.related('products').fetch(options);
+                for (const productModel of existingProducts.models) {
+                    memberProducts.push(productModel.toJSON());
+                }
+            } catch (e) {
+                this._logging.error(`Failed to attach products to member - ${data.id}`);
+            }
         } else {
             const subscriptions = await member.related('stripeSubscriptions').fetch(options);
             for (const subscription of subscriptions.models) {
                 if (this.isActiveSubscriptionStatus(subscription.get('status'))) {
-                    if (status === 'comped' || this.isComplimentarySubscription(subscription)) {
+                    try {
+                        const subscriptionProduct = await this._productRepository.get({stripe_price_id: subscription.get('stripe_price_id')});
+                        if (subscriptionProduct) {
+                            memberProducts.push(subscriptionProduct.toJSON());
+                        }
+                    } catch (e) {
+                        this._logging.error(`Failed to attach products to member - ${data.id}`);
+                        this._logging.error(e);
+                    }
+                    const isComplimentary = subscription.get('plan_nickname') && subscription.get('plan_nickname').toLowerCase() === 'complimentary';
+                    if (status === 'comped' || isComplimentary) {
                         status = 'comped';
                     } else {
                         status = 'paid';
@@ -362,7 +429,19 @@ module.exports = class MemberRepository {
                 }
             }
         }
-        const updatedMember = await this._Member.edit({status: status}, {...options, id: data.id});
+        let updatedMember;
+        try {
+            // Remove duplicate products from the list
+            memberProducts = _.uniqBy(memberProducts, function (e) {
+                return e.id;
+            });
+            // Edit member with updated products assoicated
+            updatedMember = await this._Member.edit({status: status, products: memberProducts}, {...options, id: data.id});
+        } catch (e) {
+            this._logging.error(`Failed to update member - ${data.id} - with related products`);
+            this._logging.error(e);
+            updatedMember = await this._Member.edit({status: status}, {...options, id: data.id});
+        }
         if (updatedMember.attributes.status !== updatedMember._previousAttributes.status) {
             await this._MemberStatusEvent.add({
                 member_id: data.id,
