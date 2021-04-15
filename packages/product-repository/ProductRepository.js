@@ -162,7 +162,7 @@ class ProductRepository {
 
         const product = await this._Product.edit(productData, {
             ...options,
-            id: data.id
+            id: data.id || options.id
         });
 
         if (this._stripeAPIService.configured && data.stripe_prices) {
@@ -191,7 +191,7 @@ class ProductRepository {
                     await this._StripeProduct.findOne({stripe_product_id: productId}, options) : defaultStripeProduct;
 
                 const price = await this._stripeAPIService.createPrice({
-                    product: defaultStripeProduct.stripe_product_id,
+                    product: stripeProduct.get('stripe_product_id'),
                     active: true,
                     nickname: newPrice.nickname,
                     currency: newPrice.currency,
@@ -202,7 +202,13 @@ class ProductRepository {
 
                 await this._StripePrice.add({
                     stripe_price_id: price.id,
-                    stripe_product_id: stripeProduct.stripe_product_id
+                    stripe_product_id: stripeProduct.get('stripe_product_id'),
+                    active: price.active,
+                    nickname: price.nickname,
+                    currency: price.currency,
+                    amount: price.unit_amount,
+                    type: price.type,
+                    interval: price.recurring && price.recurring.interval || null
                 }, options);
             }
 
