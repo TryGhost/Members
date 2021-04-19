@@ -3,8 +3,6 @@ const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./lib/common');
 
-const ProductRepository = require('@tryghost/product-repository');
-
 const StripeAPIService = require('./lib/services/stripe-api');
 const StripePlansService = require('./lib/services/stripe-plans');
 const StripeWebhookService = require('./lib/services/stripe-webhook');
@@ -12,6 +10,7 @@ const TokenService = require('./lib/services/token');
 const GeolocationSerice = require('./lib/services/geolocation');
 const MemberRepository = require('./lib/repositories/member');
 const EventRepository = require('./lib/repositories/event');
+const ProductRepository = require('./lib/repositories/product');
 const RouterController = require('./lib/controllers/router');
 const MemberController = require('./lib/controllers/member');
 const StripeMigrations = require('./lib/migrations');
