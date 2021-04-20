@@ -80,13 +80,6 @@ class ProductRepository {
             return await this._Product.findOne({slug: data.slug}, options);
         }
 
-        if ('limit' in data) {
-            const {data: pageData} = await this._Product.findPage({
-                limit: data.limit
-            }, options);
-            return (pageData && pageData[0]) || null;
-        }
-
         throw new Error('Missing id, slug, stripe_product_id, stripe_price_id or limit from data');
     }
 
@@ -206,6 +199,33 @@ class ProductRepository {
             const defaultStripeProduct = product.related('stripeProducts').first();
 
             const newPrices = data.stripe_prices.filter(price => !price.stripe_price_id);
+            const existingPrices = data.stripe_prices.filter((price) => {
+                return !!price.stripe_price_id && !!price.stripe_product_id;
+            });
+
+            for (const existingPrice of existingPrices) {
+                const productId = existingPrice.stripe_product_id;
+                let stripeProduct = await this._StripeProduct.findOne({stripe_product_id: productId}, options);
+                if (!stripeProduct) {
+                    stripeProduct = await this._StripeProduct.add({
+                        product_id: product.id,
+                        stripe_product_id: productId
+                    }, options);
+                }
+                const stripePrice = await this._StripePrice.findOne({stripe_price_id: existingPrice.stripe_price_id}, options);
+                if (!stripePrice) {
+                    await this._StripePrice.add({
+                        stripe_price_id: existingPrice.stripe_price_id,
+                        stripe_product_id: stripeProduct.get('stripe_product_id'),
+                        active: existingPrice.active,
+                        nickname: existingPrice.nickname,
+                        currency: existingPrice.currency,
+                        amount: existingPrice.amount,
+                        type: existingPrice.type,
+                        interval: existingPrice.interval
+                    }, options);
+                }
+            }
 
             for (const newPrice of newPrices) {
                 const productId = newPrice.stripe_product_id;
