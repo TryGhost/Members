@@ -80,7 +80,7 @@ class ProductRepository {
             return await this._Product.findOne({slug: data.slug}, options);
         }
 
-        throw new Error('Missing id, slug, stripe_product_id, stripe_price_id from data');
+        throw new Error('Missing id, slug, stripe_product_id or stripe_price_id from data');
     }
 
     /**
