@@ -97,19 +97,6 @@ class ProductRepository {
      * @returns {Promise<ProductModel>}
      **/
     async create(data, options) {
-        if (data.product_id && data.stripe_product_id && this._stripeAPIService.configured) {
-            const product = await this._Product.findOne({id: data.product_id}, options);
-            if (product) {
-                await this._StripeProduct.add({
-                    product_id: product.get('id'),
-                    stripe_product_id: data.stripe_product_id
-                }, options);
-                await product.related('stripePrices').fetch(options);
-                return product;
-            } else {
-                throw new Error(`Could not find any Product matching ${data.product_id}`);
-            }
-        }
         const productData = {
             name: data.name
         };
