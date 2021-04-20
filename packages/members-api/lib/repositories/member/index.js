@@ -300,7 +300,7 @@ module.exports = class MemberRepository {
                     ]
                 }, options);
             } else {
-                // Log error if now Ghost products found
+                // Log error if no Ghost products found
                 this._logging.error(`There was an error linking subscription - ${subscription.id}, no Products exist.`);
             }
         } catch (e) {
