@@ -278,40 +278,37 @@ module.exports = class MemberRepository {
         let ghostProduct;
         try {
             ghostProduct = await this._productRepository.get({stripe_product_id: subscriptionPriceData.product}, options);
-
             // Use first Ghost product as default product in case of missing link
-            let defaultGhostProduct = await this._productRepository.get({limit: 1}, options);
+            if (!ghostProduct) {
+                let {data: pageData} = await this._productRepository.list({limit: 1});
+                ghostProduct = (pageData && pageData[0]) || null;
+            }
 
-            // Log error if now Ghost products found
-            if (!ghostProduct && !defaultGhostProduct) {
+            // Link Stripe Product & Price to Ghost Product
+            if (ghostProduct) {
+                const productUpdateData = Object.assign({
+                    id: ghostProduct.get('id'),
+                    name: ghostProduct.get('name'),
+                    stripe_prices: [
+                        {
+                            stripe_price_id: subscriptionPriceData.id,
+                            stripe_product_id: subscriptionPriceData.product,
+                            active: subscriptionPriceData.active,
+                            nickname: subscriptionPriceData.nickname,
+                            currency: subscriptionPriceData.currency,
+                            amount: subscriptionPriceData.unit_amount,
+                            type: subscriptionPriceData.type,
+                            interval: (subscriptionPriceData.recurring && subscriptionPriceData.recurring.interval) || null
+                        }
+                    ]
+                });
+                await this._productRepository.update(productUpdateData, options);
+            } else {
+                // Log error if now Ghost products found
                 this._logging.error(`There was an error linking subscription - ${subscription.id}, no Products exist.`);
             }
-
-            // Add missing stripe product to DB linking to first Ghost Product
-            if (!ghostProduct && defaultGhostProduct) {
-                ghostProduct = defaultGhostProduct;
-                await this._productRepository.create({
-                    product_id: ghostProduct.get('id'),
-                    stripe_product_id: subscriptionPriceData.product
-                });
-            }
-            const hasStripePrice = await this._StripePrice.findOne({stripe_price_id: subscriptionPriceData.id}, options);
-
-            // Add missing stripe price to DB
-            if (ghostProduct && !hasStripePrice) {
-                await this._StripePrice.add({
-                    stripe_price_id: subscriptionPriceData.id,
-                    stripe_product_id: subscriptionPriceData.product,
-                    active: subscriptionPriceData.active,
-                    nickname: subscriptionPriceData.nickname,
-                    currency: subscriptionPriceData.currency,
-                    amount: subscriptionPriceData.unit_amount,
-                    type: subscriptionPriceData.type,
-                    interval: (subscriptionPriceData.recurring && subscriptionPriceData.recurring.interval)
-                });
-            }
         } catch (e) {
-            this._logging.error(`Failed to populate prices and product for - ${subscription.id}.`);
+            this._logging.error(`Failed to handle prices and product for - ${subscription.id}.`);
             this._logging.error(e);
         }
 
