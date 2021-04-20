@@ -283,7 +283,7 @@ module.exports = class MemberRepository {
 
             // Link Stripe Product & Price to Ghost Product
             if (ghostProduct) {
-                const productUpdateData = Object.assign({
+                await this._productRepository.update({
                     id: ghostProduct.get('id'),
                     name: ghostProduct.get('name'),
                     stripe_prices: [
@@ -298,8 +298,7 @@ module.exports = class MemberRepository {
                             interval: (subscriptionPriceData.recurring && subscriptionPriceData.recurring.interval) || null
                         }
                     ]
-                });
-                await this._productRepository.update(productUpdateData, options);
+                }, options);
             } else {
                 // Log error if now Ghost products found
                 this._logging.error(`There was an error linking subscription - ${subscription.id}, no Products exist.`);
