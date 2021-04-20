@@ -36,7 +36,7 @@ class ProductRepository {
     /**
      * Retrieves a Product by either stripe_product_id, stripe_price_id, id or slug
      *
-     * @param {{stripe_product_id: string} | {stripe_price_id: string} | {id: string} | {slug: string} | {limit: number}} data
+     * @param {{stripe_product_id: string} | {stripe_price_id: string} | {id: string} | {slug: string}} data
      * @param {object} options
      *
      * @returns {Promise<ProductModel>}
@@ -80,7 +80,7 @@ class ProductRepository {
             return await this._Product.findOne({slug: data.slug}, options);
         }
 
-        throw new Error('Missing id, slug, stripe_product_id, stripe_price_id or limit from data');
+        throw new Error('Missing id, slug, stripe_product_id, stripe_price_id from data');
     }
 
     /**
