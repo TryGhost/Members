@@ -226,7 +226,7 @@ class ProductRepository {
                         id: stripePrice.id
                     });
 
-                    await this._stripeAPIService.updatePrice(updated.stripe_price_id, {
+                    await this._stripeAPIService.updatePrice(updated.get('stripe_price_id'), {
                         nickname: updated.get('nickname'),
                         active: updated.get('active')
                     });
