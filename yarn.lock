@@ -182,6 +182,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/jsonwebtoken@^8.5.1":
+  version "8.5.1"
+  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-8.5.1.tgz#56958cb2d80f6d74352bd2e501a018e2506a8a84"
+  integrity sha512-rNAPdomlIUX0i0cg2+I+Q1wOUr531zHBQ+cV/28PJ39bSPKjahatZZ2LMuhiguETkCgLVzfruw/ZvNMNkKoSzw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/keygrip@*":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@types/keygrip/-/keygrip-1.0.2.tgz#513abfd256d7ad0bf1ee1873606317b33b1b2a72"
@@ -191,6 +198,13 @@
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.2.tgz#857a118d8634c84bba7ae14088e4508490cd5da5"
   integrity sha512-4kPlzbljFcsttWEq6aBW0OZe6BDajAmyvr2xknBG92tejQnvdGtT9+kXSZ580DqpxY9qG2xeQVF9Dq0ymUTo5Q==
+
+"@types/node-jose@^1.1.6":
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/@types/node-jose/-/node-jose-1.1.6.tgz#b8d5bb9acb18177b501b347d9743f676e8a4d234"
+  integrity sha512-iAr2hvnqg7ZktBjdbeT1yhXzIZcwp6C564mEsnr45ty+wE2AeSxIlNM9rGhhtQDdOWl6Kg3IbadgzA9/VWwnXw==
+  dependencies:
+    "@types/node" "*"
 
 "@types/node@*":
   version "14.0.24"
