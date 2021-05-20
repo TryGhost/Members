@@ -199,7 +199,7 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.2.tgz#857a118d8634c84bba7ae14088e4508490cd5da5"
   integrity sha512-4kPlzbljFcsttWEq6aBW0OZe6BDajAmyvr2xknBG92tejQnvdGtT9+kXSZ580DqpxY9qG2xeQVF9Dq0ymUTo5Q==
 
-"@types/node-jose@^1.1.6":
+"@types/node-jose@1.1.6":
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/@types/node-jose/-/node-jose-1.1.6.tgz#b8d5bb9acb18177b501b347d9743f676e8a4d234"
   integrity sha512-iAr2hvnqg7ZktBjdbeT1yhXzIZcwp6C564mEsnr45ty+wE2AeSxIlNM9rGhhtQDdOWl6Kg3IbadgzA9/VWwnXw==
