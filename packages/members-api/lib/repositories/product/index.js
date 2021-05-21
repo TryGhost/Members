@@ -100,18 +100,18 @@ class ProductRepository {
      * @returns {Promise<ProductModel>}
      **/
     async create(data, options) {
+        if (!this._stripeAPIService.configured && data.stripe_prices) {
+            throw new UpdateCollisionError({
+                code: 'STRIPE_NOT_CONFIGURED'
+            });
+        }
+
         const productData = {
             name: data.name,
             description: data.description
         };
 
         const product = await this._Product.add(productData, options);
-
-        if (!this._stripeAPIService.configured && data.stripe_prices) {
-            throw new UpdateCollisionError({
-                code: 'STRIPE_NOT_CONFIGURED'
-            });
-        }
 
         if (this._stripeAPIService.configured) {
             const stripeProduct = await this._stripeAPIService.createProduct({
@@ -169,6 +169,12 @@ class ProductRepository {
      * @returns {Promise<ProductModel>}
      **/
     async update(data, options) {
+        if (!this._stripeAPIService.configured && data.stripe_prices) {
+            throw new UpdateCollisionError({
+                code: 'STRIPE_NOT_CONFIGURED'
+            });
+        }
+
         const productData = {
             name: data.name,
             description: data.description
@@ -178,12 +184,6 @@ class ProductRepository {
             ...options,
             id: data.id || options.id
         });
-
-        if (!this._stripeAPIService.configured && data.stripe_prices) {
-            throw new UpdateCollisionError({
-                code: 'STRIPE_NOT_CONFIGURED'
-            });
-        }
 
         if (this._stripeAPIService.configured && data.stripe_prices) {
             await product.related('stripeProducts').fetch(options);
