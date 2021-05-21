@@ -1,3 +1,5 @@
+const {UpdateCollisionError} = require('@tryghost/errors');
+
 /**
  * @typedef {object} ProductModel
  */
@@ -105,6 +107,12 @@ class ProductRepository {
 
         const product = await this._Product.add(productData, options);
 
+        if (!this._stripeAPIService.configured && data.stripe_prices) {
+            throw new UpdateCollisionError({
+                code: 'STRIPE_NOT_CONFIGURED'
+            });
+        }
+
         if (this._stripeAPIService.configured) {
             const stripeProduct = await this._stripeAPIService.createProduct({
                 name: productData.name
@@ -170,6 +178,12 @@ class ProductRepository {
             ...options,
             id: data.id || options.id
         });
+
+        if (!this._stripeAPIService.configured && data.stripe_prices) {
+            throw new UpdateCollisionError({
+                code: 'STRIPE_NOT_CONFIGURED'
+            });
+        }
 
         if (this._stripeAPIService.configured && data.stripe_prices) {
             await product.related('stripeProducts').fetch(options);
