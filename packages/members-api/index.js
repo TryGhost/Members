@@ -2,6 +2,7 @@ const {Router} = require('express');
 const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./lib/common');
+const bluebirdPromise = require('bluebird');
 
 const StripeAPIService = require('./lib/services/stripe-api');
 const StripeWebhookService = require('./lib/services/stripe-webhook');
@@ -222,6 +223,47 @@ module.exports = function MembersApi({
         return magicLinkService.sendMagicLink({email, type, requestSrc, tokenData: Object.assign({email}, tokenData)});
     }
 
+    /** Destructive method alert: This will clear all Stripe related table data from DB, is used for
+     * - Resetting state on Stripe disconnect
+     */
+    async function resetStripeModels({options}) {
+        const hasActiveSubscriptions = hasActiveStripeSubscriptions();
+        if (hasActiveSubscriptions) {
+            throw new common.errors.BadRequestError({
+                message: 'Cannot disconnect Stripe whilst you have active subscriptions.'
+            });
+        }
+        common.logging.info('Resetting Stripe models');
+        return StripePrice.findAll(options)
+            .then((response) => {
+                common.logging.info('Deleting Stripe prices');
+                return bluebirdPromise.map(response.models, (price) => {
+                    return StripePrice.destroy(Object.assign({id: price.id}, options));
+                }, {concurrency: 100});
+            })
+            .then(() => StripeProduct.findAll(options))
+            .then((response) => {
+                common.logging.info('Deleting Stripe products');
+                return bluebirdPromise.map(response.models, (stripeProduct) => {
+                    return StripeProduct.destroy(Object.assign({id: stripeProduct.id}, options));
+                }, {concurrency: 100});
+            })
+            .then(() => StripeCustomerSubscription.findAll(options))
+            .then((response) => {
+                common.logging.info('Deleting Stripe customer subscriptions');
+                return bluebirdPromise.map(response.models, (stripeCustomerSubscription) => {
+                    return StripeCustomerSubscription.destroy(Object.assign({id: stripeCustomerSubscription.id}, options));
+                }, {concurrency: 100});
+            })
+            .then(() => StripeCustomer.findAll(options))
+            .then((response) => {
+                common.logging.info('Deleting Stripe customers');
+                return bluebirdPromise.map(response.models, (stripeCustomer) => {
+                    return StripeCustomer.destroy(Object.assign({id: stripeCustomer.id}, options));
+                }, {concurrency: 100});
+            });
+    }
+
     function getMagicLink(email) {
         return magicLinkService.getMagicLink({tokenData: {email}, type: 'signin'});
     }
@@ -378,6 +420,7 @@ module.exports = function MembersApi({
         getPublicConfig,
         bus,
         sendEmailWithMagicLink,
+        resetStripeModels,
         getMagicLink,
         hasActiveStripeSubscriptions,
         members: users,
