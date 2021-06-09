@@ -68,10 +68,22 @@ module.exports = class MemberRepository {
             });
         }
 
-        const memberData = _.pick(data, ['email', 'name', 'note', 'subscribed', 'geolocation', 'created_at']);
+        const allowedProperties = [
+            'email',
+            'name',
+            'note',
+            'subscribed',
+            'geolocation'
+        ];
+
+        if (!this._stripeAPIService.configured) {
+            allowedProperties.push('products')
+        }
+
+        const cleanData = _.pick(data, allowedProperties);
 
         const member = await this._Member.add({
-            ...memberData,
+            ...cleanData,
             labels
         }, options);
 
@@ -104,14 +116,22 @@ module.exports = class MemberRepository {
     }
 
     async update(data, options) {
-        const member = await this._Member.edit(_.pick(data, [
+        const allowedProperties = [
             'email',
             'name',
             'note',
             'subscribed',
             'labels',
             'geolocation'
-        ]), options);
+        ];
+
+        if (!this._stripeAPIService.configured) {
+            allowedProperties.push('products')
+        }
+
+        const cleanData = _.pick(data, allowedProperties);
+
+        const member = await this._Member.edit(cleanData, options);
 
         // member._changed.subscribed has a value if the `subscribed` attribute is passed in the update call, regardless of the previous value
         if (member.attributes.subscribed !== member._previousAttributes.subscribed) {
