@@ -133,6 +133,11 @@ module.exports = class RouterController {
 
         const priceId = price.get('stripe_price_id');
 
+        if (!plan) {
+            res.writeHead(400);
+            return res.end('Bad Request.');
+        }
+
         let email;
         try {
             if (!identity) {
