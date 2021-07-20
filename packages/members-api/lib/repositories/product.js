@@ -208,10 +208,10 @@ class ProductRepository {
                 }
             }
 
-            await product.related('stripePrices').fetch(options);
-            await product.related('monthlyPrice').fetch(options);
-            await product.related('yearlyPrice').fetch(options);
-            await product.related('benefits').fetch(options);
+            return this._Product.findOne({id: product.id}, {
+                ...options,
+                withRelated: ['stripePrices', 'monthlyPrice', 'yearlyPrice', 'benefits']
+            });
         }
 
         return product;
