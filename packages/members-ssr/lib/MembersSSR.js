@@ -161,12 +161,13 @@ class MembersSSR {
      * @method _getMemberIdentityData
      *
      * @param {string} email
+     * @param {object} options
      *
      * @returns {Promise<Member>} member
      */
-    async _getMemberIdentityData(email) {
+    async _getMemberIdentityData(email, options) {
         const api = await this._getMembersApi();
-        return api.getMemberIdentityData(email);
+        return api.getMemberIdentityData(email, options);
     }
 
     /**
@@ -254,8 +255,8 @@ class MembersSSR {
      */
     async getMemberDataFromSession(req, res) {
         const email = this._getSessionCookies(req, res);
-
-        const member = await this._getMemberIdentityData(email);
+        const {include} = req.query;
+        const member = await this._getMemberIdentityData(email, {include});
         return member;
     }
 

@@ -2,6 +2,7 @@ const {Router} = require('express');
 const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./common');
+const _ = require('lodash');
 
 const StripeAPIService = require('./services/stripe-api');
 const StripeWebhookService = require('./services/stripe-webhook');
@@ -265,14 +266,26 @@ module.exports = function MembersAPI({
         return getMemberIdentityData(email);
     }
 
-    async function getMemberIdentityData(email) {
+    async function getMemberIdentityData(email, {include = ''} = {}) {
+        const withRelated = [
+            'stripeSubscriptions',
+            'stripeSubscriptions.stripePrice',
+            'products'
+        ];
+        const requestedQueryIncludes = include.split(',') || [];
+        const optionalIncludes = [
+            'labels',
+            'stripeSubscriptions.customer',
+            'stripeSubscriptions.stripePrice.stripeProduct',
+            'stripeSubscriptions.stripePrice.stripeProduct.product'
+        ];
+        requestedQueryIncludes.forEach((_include) => {
+            if (optionalIncludes.includes(_include)) {
+                withRelated.push(_include);
+            }
+        });
         const model = await users.get({email}, {
-            withRelated: [
-                'stripeSubscriptions',
-                'stripeSubscriptions.stripePrice',
-                'labels',
-                'products'
-            ]
+            withRelated: withRelated
         });
         if (!model) {
             return null;
