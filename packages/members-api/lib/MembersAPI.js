@@ -270,7 +270,6 @@ module.exports = function MembersAPI({
             withRelated: [
                 'stripeSubscriptions',
                 'stripeSubscriptions.stripePrice',
-                'labels',
                 'products'
             ]
         });
