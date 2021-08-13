@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const errors = require('@tryghost/errors');
 const tpl = require('@tryghost/tpl');
+const ObjectId = require('bson-objectid');
 
 const messages = {
     noStripeConnection: 'Cannot {action} without a Stripe Connection',
@@ -398,7 +399,8 @@ module.exports = class MemberRepository {
             const relations = memberIds.map((id) => {
                 return {
                     member_id: id,
-                    label_id: data.meta.label.id
+                    label_id: data.meta.label.id,
+                    id: ObjectId()
                 };
             });
 
