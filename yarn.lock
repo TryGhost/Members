@@ -2112,7 +2112,7 @@ keyv@^3.0.0:
   dependencies:
     json-buffer "3.0.0"
 
-leaky-bucket@2.2.0:
+leaky-bucket@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/leaky-bucket/-/leaky-bucket-2.2.0.tgz#d37da29a45f64528c86b6882d2b5e1594588e2de"
   integrity sha512-87qsyt18gLVb+uB+zVz1zSi3yl6UJD5AoKINNOg3PBfqMis1FGgfOTi6hLkw7lJYZ3Gawf/BLj76WhDqsT0eZA==
@@ -3248,7 +3248,7 @@ strip-json-comments@3.1.1, strip-json-comments@^3.0.1, strip-json-comments@^3.1.
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz#31f1281b3832630434831c310c01cccda8cbe006"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
 
-stripe@^8.142.0, stripe@^8.174.0:
+stripe@^8.174.0:
   version "8.174.0"
   resolved "https://registry.yarnpkg.com/stripe/-/stripe-8.174.0.tgz#91d2e61b0217b1ee9fde2842582e0f1cf1dddc94"
   integrity sha512-UFU5TuYH7XwUmSllUIcIKhhsvvhhjw9D6ZwVdfB74wU4VOOaWBiQqszkw6chaEFpdulUmbcAH5eZltV3HwOi7g==
