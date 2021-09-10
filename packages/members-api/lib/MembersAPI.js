@@ -110,7 +110,16 @@ module.exports = function MembersAPI({
     });
 
     const memberBREADService = new MemberBREADService({
-        memberRepository
+        memberRepository,
+        emailService: {
+            sendEmailWithMagicLink
+        },
+        labsService: {
+            isSet() {
+                return true;
+            }
+        },
+        stripeService: stripeAPIService
     });
 
     const stripeWebhookService = new StripeWebhookService({
