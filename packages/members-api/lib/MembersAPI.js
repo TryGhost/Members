@@ -51,7 +51,8 @@ module.exports = function MembersAPI({
         Product,
         Settings
     },
-    logger
+    logger,
+    labsService
 }) {
     if (logger) {
         common.logging.setLogger(logger);
@@ -114,11 +115,7 @@ module.exports = function MembersAPI({
         emailService: {
             sendEmailWithMagicLink
         },
-        labsService: {
-            isSet() {
-                return true;
-            }
-        },
+        labsService,
         stripeService: stripeAPIService
     });
 
