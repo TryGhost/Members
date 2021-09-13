@@ -221,7 +221,7 @@ module.exports = class MemberBREADService {
         }
 
         const hasCompedSubscription = !!model.related('stripeSubscriptions').find((sub) => {
-            return sub.get('plan_nickname') === 'Complimentary' && sub.get('status') === 'active'
+            return sub.get('plan_nickname') === 'Complimentary' && sub.get('status') === 'active';
         });
 
         if (!this.labsService.isSet('multipleProducts')) {
