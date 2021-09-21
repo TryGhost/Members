@@ -224,13 +224,12 @@ module.exports = class RouterController {
         try {
             const {events} = req.body;
             for (const event of events) {
-                const member = await this._memberRepository.getByToken(event.identity);
                 if (event.type === 'entry_view') {
                     const entryEvent = new MemberEntryViewEvent({
                         entryId: event.entry_id,
                         entryUrl: event.entry_url,
-                        memberId: member.get('id'),
-                        memberStatus: member.get('status')
+                        memberId: req.member ? req.member.id : null,
+                        memberStatus: req.member ? req.member.status : null
                     }, event.created_at);
                     DomainEvents.dispatch(entryEvent);
                 }
