@@ -142,8 +142,9 @@ module.exports = function MembersAPI({
     const memberController = new MemberController({
         memberRepository,
         StripePrice,
-        stripeAPIService,
-        tokenService
+        tokenService,
+        sendEmailWithMagicLink,
+        allowSelfSignup
     });
 
     const routerController = new RouterController({
@@ -337,6 +338,10 @@ module.exports = function MembersAPI({
         createCheckoutSetupSession: Router().use(
             body.json(),
             (req, res) => routerController.createCheckoutSetupSession(req, res)
+        ),
+        updateEmailAddress: Router().use(
+            body.json(),
+            (req, res) => memberController.updateEmailAddress(req, res)
         ),
         updateSubscription: Router({mergeParams: true}).use(
             body.json(),
