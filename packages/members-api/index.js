@@ -253,6 +253,10 @@ module.exports = function MembersApi({
             body.json(),
             (req, res) => routerController.createCheckoutSetupSession(req, res)
         ),
+        updateEmailAddress: Router().use(
+            body.json(),
+            (req, res) => routerController.updateEmailAddress(req, res)
+        ),
         updateSubscription: Router({mergeParams: true}).use(
             body.json(),
             (req, res) => routerController.updateSubscription(req, res)
