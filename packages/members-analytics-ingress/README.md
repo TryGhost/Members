@@ -2,11 +2,11 @@
 
 ## Install
 
-`npm install @tryghost/events-controller --save`
+`npm install @tryghost/members-analytics-ingress --save`
 
 or
 
-`yarn add @tryghost/events-controller`
+`yarn add @tryghost/members-analytics-ingress`
 
 
 ## Usage
@@ -34,6 +34,6 @@ Follow the instructions for the top-level repo.
 
 
 
-# Copyright & License 
+# Copyright & License
 
 Copyright (c) 2013-2021 Ghost Foundation - Released under the [MIT license](LICENSE).
