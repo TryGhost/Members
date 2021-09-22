@@ -5,7 +5,7 @@
     "useWorkspaces": true,
     "command": {
         "publish": {
-            "allowBranch": "master",
+            "allowBranch": ["members-api@0.37.13"],
             "message": "Published new versions"
         }
     },
