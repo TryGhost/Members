@@ -1,4 +1,6 @@
-const EventsRepository = require('./EventsRepository');
+const DomainEvents = require('@tryghost/domain-events');
+const {MemberEntryViewEvent} = require('@tryghost/member-events');
+
 /**
  * @template Data
  * @typedef {object} IEvent
@@ -11,7 +13,16 @@ class EventsController {
         try {
             const {events} = req.body;
             for (const event of events) {
-                EventsRepository.create(event);
+                if (event.type === 'entry_view') {
+                    const {entryId, entryUrl, memberId, memberStatus, createdAt} = event;
+                    const entryEvent = new MemberEntryViewEvent({
+                        entryId,
+                        entryUrl,
+                        memberId,
+                        memberStatus
+                    }, createdAt);
+                    DomainEvents.dispatch(entryEvent);
+                }
             }
             res.writeHead(201);
             return res.end('Created.');
