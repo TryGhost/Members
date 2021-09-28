@@ -115,6 +115,7 @@ module.exports = class RouterController {
     async createCheckoutSession(req, res) {
         const ghostPriceId = req.body.priceId;
         const identity = req.body.identity;
+        const offerId = req.body.offerId;
 
         if (!ghostPriceId) {
             res.writeHead(400);
@@ -147,9 +148,18 @@ module.exports = class RouterController {
 
         const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']}) : null;
 
+        let coupon = null;
+        if (offerId && true) {
+            coupon = await this._stripeAPIService.createCoupon({
+                duration: 'forever',
+                percent_off: 50
+            });
+        }
+
         if (!member) {
             const customer = null;
             const session = await this._stripeAPIService.createCheckoutSession(priceId, customer, {
+                coupon,
                 successUrl: req.body.successUrl || this._config.checkoutSuccessUrl,
                 cancelUrl: req.body.cancelUrl || this._config.checkoutCancelUrl,
                 customerEmail: req.body.customerEmail,
