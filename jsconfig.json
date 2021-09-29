@@ -1,0 +1,13 @@
+{
+  "include": [
+    "packages/**/*.js"
+  ],
+  "compilerOptions": {
+     "checkJs": true,
+     "module": "commonjs",
+     "target": "es2018",
+     "moduleResolution": "node",
+     "strictFunctionTypes": true,
+     "noImplicitAny": true
+  }
+}
