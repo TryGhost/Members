@@ -3,7 +3,6 @@ const body = require('body-parser');
 const MagicLink = require('@tryghost/magic-link');
 const common = require('./common');
 
-const StripeAPIService = require('@tryghost/members-stripe-service');
 const MemberAnalyticsService = require('@tryghost/member-analytics-service');
 const MembersAnalyticsIngress = require('@tryghost/members-analytics-ingress');
 
