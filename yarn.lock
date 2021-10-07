@@ -358,6 +358,13 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
+"@tryghost/string@^0.1.20":
+  version "0.1.20"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.20.tgz#da38e1412b2bb53dee1fe1e7a7de3f43450452a0"
+  integrity sha512-+EA1BJ5D55RQA3HsTMchGdxXL/0cN/rHbSjqLhjBhKuWTFNLb6AR9res1Bw3vb7ZxMV0ggUOrFDJ1Lqo2RbsEA==
+  dependencies:
+    unidecode "^0.1.8"
+
 "@tryghost/tpl@^0.1.2", "@tryghost/tpl@^0.1.3":
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-0.1.3.tgz#719e1161f7af1f9cfed055aeb8e1ba8058103d3f"
@@ -4293,6 +4300,11 @@ unc-path-regex@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/unc-path-regex/-/unc-path-regex-0.1.2.tgz#e73dd3d7b0d7c5ed86fbac6b0ae7d8c6a69d50fa"
   integrity sha1-5z3T17DXxe2G+6xrCufYxqadUPo=
+
+unidecode@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/unidecode/-/unidecode-0.1.8.tgz#efbb301538bc45246a9ac8c559d72f015305053e"
+  integrity sha1-77swFTi8RSRqmsjFWdcvAVMFBT4=
 
 union-value@^1.0.0:
   version "1.0.1"
