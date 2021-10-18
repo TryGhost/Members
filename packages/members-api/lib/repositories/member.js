@@ -625,7 +625,7 @@ module.exports = class MemberRepository {
             } else {
                 status = 'paid';
             }
-            // This is a new subscription! Add the product
+            // This is an active subscription! Add the product
             if (ghostProduct) {
                 memberProducts.push(ghostProduct.toJSON());
             }
