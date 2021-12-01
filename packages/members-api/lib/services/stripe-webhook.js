@@ -142,9 +142,9 @@ module.exports = class StripeWebhookService {
             customer_id: subscription.customer
         });
         const subscriptionPriceData = _.get(subscription, 'items.data');
-        if (subscriptionPriceData && subscriptionPriceData.length > 1) {
+        if (!subscriptionPriceData || subscriptionPriceData.length !== 1) {
             throw new errors.BadRequestError({
-                message: 'Subscription cannot have more than 1 prices'
+                message: 'Subscription should have exactly 1 price item'
             });
         }
         if (member) {
