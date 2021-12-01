@@ -148,7 +148,12 @@ module.exports = class StripeWebhookService {
         const member = await this._memberRepository.get({
             customer_id: subscription.customer
         });
-
+        for (let i = 0; i < 10; i++) {
+            this._memberRepository.linkSubscription({
+                id: member.id,
+                subscription
+            });
+        }
         if (member) {
             await this._memberRepository.linkSubscription({
                 id: member.id,
