@@ -141,7 +141,12 @@ module.exports = class StripeWebhookService {
         const member = await this._memberRepository.get({
             customer_id: subscription.customer
         });
-
+        const subscriptionPriceData = _.get(subscription, 'items.data');
+        if (subscriptionPriceData && subscriptionPriceData.length > 1) {
+            throw new errors.BadRequestError({
+                message: 'Subscription cannot have more than 1 prices'
+            });
+        }
         if (member) {
             await this._memberRepository.linkSubscription({
                 id: member.id,
