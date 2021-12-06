@@ -390,6 +390,14 @@
     lodash "^4.17.21"
     uuid "^8.3.2"
 
+"@tryghost/errors@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.1.1.tgz#dc38e40591b018b0ac6b5742f7bab5d379c67e60"
+  integrity sha512-na0qB5sdy1BWgquzn+m530ohJ3fTeF451xUTR7I8b76TBEL9snnIkXCv5Qdjmnevmgod7aAGsHi2syyKFlvEvQ==
+  dependencies:
+    lodash "^4.17.21"
+    uuid "^8.3.2"
+
 "@tryghost/ignition-errors@^0.1.0":
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/@tryghost/ignition-errors/-/ignition-errors-0.1.4.tgz#630520db9c2b711c32558cd67e9453500ec62b2c"
