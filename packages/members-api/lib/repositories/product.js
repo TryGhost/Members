@@ -507,8 +507,7 @@ class ProductRepository {
             });
         }
         return this._Product.findPage({
-            ...options,
-            filter: 'type:paid'
+            ...options
         });
     }
 
