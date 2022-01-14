@@ -241,7 +241,6 @@ class ProductRepository {
      * @param {string} data.id
      * @param {string} data.name
      * @param {string} data.description
-     * @param {string} data.type
      * @param {BenefitInput[]} data.benefits
      *
      * @param {StripePriceInput[]=} data.stripe_prices
