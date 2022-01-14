@@ -108,7 +108,6 @@ class ProductRepository {
      * @param {StripePriceInput[]} data.stripe_prices
      * @param {StripePriceInput|null} data.monthly_price
      * @param {StripePriceInput|null} data.yearly_price
-     * @param {string} data.type
      * @param {string} data.product_id
      * @param {string} data.stripe_product_id
      *
@@ -142,7 +141,7 @@ class ProductRepository {
 
         const product = await this._Product.add(productData, options);
 
-        if (this._stripeAPIService.configured && data.type !== 'free') {
+        if (this._stripeAPIService.configured) {
             const stripeProduct = await this._stripeAPIService.createProduct({
                 name: productData.name
             });
@@ -269,19 +268,26 @@ class ProductRepository {
                 });
             });
         }
+        const productId = data.id || options.id;
 
-        const productData = {
+        const existingProduct = await this._Product.findOne({id: productId}, options);
+
+        let productData = {
             name: data.name,
             description: data.description,
             benefits: data.benefits
         };
 
+        if (existingProduct.get('type') === 'free') {
+            delete productData.name;
+        }
+
         let product = await this._Product.edit(productData, {
             ...options,
-            id: data.id || options.id
+            id: productId
         });
 
-        if (this._stripeAPIService.configured && data.type !== 'free') {
+        if (this._stripeAPIService.configured && product.get('type') !== 'free') {
             await product.related('stripeProducts').fetch(options);
 
             if (!product.related('stripeProducts').first()) {
