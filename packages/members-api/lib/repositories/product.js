@@ -507,7 +507,10 @@ class ProductRepository {
                 });
             });
         }
-        return this._Product.findPage(options);
+        return this._Product.findPage({
+            ...options,
+            filter: 'type:paid'
+        });
     }
 
     async destroy() {
