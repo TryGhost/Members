@@ -506,9 +506,7 @@ class ProductRepository {
                 });
             });
         }
-        return this._Product.findPage({
-            ...options
-        });
+        return this._Product.findPage(options);
     }
 
     async destroy() {
