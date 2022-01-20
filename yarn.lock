@@ -51,7 +51,7 @@
     eslint-visitor-keys "^2.1.0"
     semver "^6.3.0"
 
-"@babel/eslint-parser@^7.15.7":
+"@babel/eslint-parser@7.15.7":
   version "7.15.7"
   resolved "https://registry.yarnpkg.com/@babel/eslint-parser/-/eslint-parser-7.15.7.tgz#2dc3d0ff0ea22bb1e08d93b4eeb1149bf1c75f2d"
   integrity sha512-yJkHyomClm6A2Xzb8pdAo4HzYMSXFn1O5zrCYvbFP0yQFvHueLedV8WiEno8yJOKStjUXzBZzJFeWQ7b3YMsqQ==
@@ -60,7 +60,7 @@
     eslint-visitor-keys "^2.1.0"
     semver "^6.3.0"
 
-"@babel/eslint-parser@^7.16.5":
+"@babel/eslint-parser@7.16.5":
   version "7.16.5"
   resolved "https://registry.yarnpkg.com/@babel/eslint-parser/-/eslint-parser-7.16.5.tgz#48d3485091d6e36915358e4c0d0b2ebe6da90462"
   integrity sha512-mUqYa46lgWqHKQ33Q6LNCGp/wPR3eqOYTUixHFsfrSQqRxH0+WOzca75iEjFr5RDGH1dDz622LaHhLOzOuQRUA==
@@ -498,7 +498,7 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bookshelf@^1.2.3":
+"@types/bookshelf@1.2.3":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@types/bookshelf/-/bookshelf-1.2.3.tgz#8a6841f99d8b18ee2a56cf963a89d60f82738823"
   integrity sha512-uQEGn0qzty+45L42VLh7Ze1GuTvlZNOORbBjTY7+0cfFJqKbPXph/tSznFboqOkALLMZfwta+t9CWAAAd0nHag==
