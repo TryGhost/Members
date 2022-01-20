@@ -498,10 +498,10 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bookshelf@1.2.3":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@types/bookshelf/-/bookshelf-1.2.3.tgz#8a6841f99d8b18ee2a56cf963a89d60f82738823"
-  integrity sha512-uQEGn0qzty+45L42VLh7Ze1GuTvlZNOORbBjTY7+0cfFJqKbPXph/tSznFboqOkALLMZfwta+t9CWAAAd0nHag==
+"@types/bookshelf@1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@types/bookshelf/-/bookshelf-1.2.7.tgz#ba21dae9957c3321b0faa0e780d13f0468db390f"
+  integrity sha512-xvSqkvwv4bGMi0WWL12aR5jBUmmoTP66AEoNhuG/VDDHyMHpG7WLOn+vyPYRyGktR6KSlC+/JCVxJzowwyFKmg==
   dependencies:
     "@types/bluebird" "*"
     "@types/create-error" "*"
