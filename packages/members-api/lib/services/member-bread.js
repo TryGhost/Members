@@ -22,25 +22,35 @@ const messages = {
  * @prop {boolean} configured
  */
 
+/**
+ * @typedef {object} IVerificationService
+ */
+
 module.exports = class MemberBREADService {
     /**
      * @param {object} deps
      * @param {import('../repositories/member')} deps.memberRepository
+     * @param {import('../repositories/event')} deps.eventRepository
      * @param {import('@tryghost/members-offers/lib/application/OffersAPI')} deps.offersAPI
      * @param {ILabsService} deps.labsService
      * @param {IEmailService} deps.emailService
      * @param {IStripeService} deps.stripeService
+     * @param {IVerificationService} deps.verificationService
      */
-    constructor({memberRepository, labsService, emailService, stripeService, offersAPI}) {
+    constructor({memberRepository, eventRepository, labsService, emailService, stripeService, offersAPI, verificationService}) {
         this.offersAPI = offersAPI;
         /** @private */
         this.memberRepository = memberRepository;
+        /** @private */
+        this.eventRepository = eventRepository;
         /** @private */
         this.labsService = labsService;
         /** @private */
         this.emailService = emailService;
         /** @private */
         this.stripeService = stripeService;
+        /** @private */
+        this.verificationService = verificationService;
     }
 
     /**
@@ -207,6 +217,24 @@ module.exports = class MemberBREADService {
                 });
             }
             throw error;
+        }
+
+        const threshold = this.verificationService.getConfigThreshold();
+        if (!isFinite(threshold)) {
+            const createdAt = new Date();
+            createdAt.setDate(createdAt.getDate() - 30);
+            const events = await this.eventRepository.getNewsletterSubscriptionEvents({
+                // Date in last 30 days, source is API
+                filter: `source:api+created_at>${Math.floor(createdAt.valueOf() / 1000)}`
+            });
+
+            console.log(JSON.stringify(events.meta));
+            
+            if (events.meta.count > threshold) {
+                await this.verificationService.startEmailVerification({
+                    importedNumber: events.meta.count
+                });
+            }
         }
 
         try {

@@ -70,7 +70,9 @@ describe('Importer', function () {
                 addJob: sinon.stub(),
                 knex: knexStub,
                 urlFor: sinon.stub(),
-                fetchThreshold: async () => 2
+                verificationTrigger: {
+                    getImportThreshold: async () => 2
+                }
             });
 
             const result = await importer.process({
@@ -146,7 +148,9 @@ describe('Importer', function () {
                 addJob: sinon.stub(),
                 knex: knexStub,
                 urlFor: sinon.stub(),
-                fetchThreshold: async () => 1
+                verificationTrigger: {
+                    getImportThreshold: async () => 1
+                }
             });
 
             const result = await importer.process({
@@ -189,7 +193,10 @@ describe('Importer', function () {
                 isSet: sinon.stub(),
                 addJob: sinon.stub(),
                 knex: sinon.stub(),
-                urlFor: sinon.stub()
+                urlFor: sinon.stub(),
+                verificationTrigger: {
+                    getImportThreshold: async () => Infinity
+                }
             });
 
             const result = await membersImporter.prepare(`${csvPath}/single-column-with-header.csv`);
@@ -212,7 +219,10 @@ describe('Importer', function () {
                 isSet: sinon.stub(),
                 addJob: sinon.stub(),
                 knex: sinon.stub(),
-                urlFor: sinon.stub()
+                urlFor: sinon.stub(),
+                verificationTrigger: {
+                    getImportThreshold: async () => Infinity
+                }
             });
 
             await membersImporter.prepare(`${csvPath}/single-column-with-header.csv`);
