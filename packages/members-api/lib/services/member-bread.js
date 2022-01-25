@@ -220,19 +220,18 @@ module.exports = class MemberBREADService {
         }
 
         const threshold = this.verificationService.getConfigThreshold();
-        if (!isFinite(threshold)) {
+
+        if (isFinite(threshold)) {
             const createdAt = new Date();
             createdAt.setDate(createdAt.getDate() - 30);
             const events = await this.eventRepository.getNewsletterSubscriptionEvents({
                 // Date in last 30 days, source is API
-                filter: `source:api+created_at>${Math.floor(createdAt.valueOf() / 1000)}`
+                filter: `source:api+created_at:>${Math.floor(createdAt.valueOf() / 1000)}`
             });
 
-            console.log(JSON.stringify(events.meta));
-            
-            if (events.meta.count > threshold) {
+            if (events.meta.pagination.total > threshold) {
                 await this.verificationService.startEmailVerification({
-                    importedNumber: events.meta.count
+                    importedNumber: events.meta.pagination.total
                 });
             }
         }
