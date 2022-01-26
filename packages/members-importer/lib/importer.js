@@ -12,18 +12,6 @@ const messages = {
     jobAlreadyComplete: 'Job is already complete.'
 };
 
-/**
- * @typedef {object} IVerificationResult
- * @prop {boolean} needsVerification Whether to require verification
- */
-
-/**
- * @typedef {object} IVerificationTrigger
- * @prop {() => number} getConfigThreshold
- * @prop {() => Promise<number>} getImportThreshold
- * @prop {(data: {amountImported: number, throwOnTrigger: boolean}) => Promise<IVerificationResult>} startVerificationProcess
- */
-
 module.exports = class MembersCSVImporter {
     /**
      * @param {Object} options
@@ -35,9 +23,8 @@ module.exports = class MembersCSVImporter {
      * @param {({name, at, job, data, offloaded}) => void} options.addJob - Method registering an async job
      * @param {Object} options.knex - An instance of the Ghost Database connection
      * @param {Function} options.urlFor - function generating urls
-     * @param {IVerificationTrigger} options.verificationTrigger
      */
-    constructor({storagePath, getTimezone, getMembersApi, sendEmail, isSet, addJob, knex, urlFor, verificationTrigger}) {
+    constructor({storagePath, getTimezone, getMembersApi, sendEmail, isSet, addJob, knex, urlFor}) {
         this._storagePath = storagePath;
         this._getTimezone = getTimezone;
         this._getMembersApi = getMembersApi;
@@ -46,7 +33,6 @@ module.exports = class MembersCSVImporter {
         this._addJob = addJob;
         this._knex = knex;
         this._urlFor = urlFor;
-        this._verificationTrigger = verificationTrigger;
     }
 
     /**
@@ -285,10 +271,8 @@ module.exports = class MembersCSVImporter {
     async process({pathToCSV, headerMapping, globalLabels, importLabel, user, LabelModel}) {
         const meta = {};
         const job = await this.prepare(pathToCSV, headerMapping, globalLabels);
-        const threshold = await this._verificationTrigger.getImportThreshold();
 
         meta.originalImportSize = job.batches;
-        meta.freeze = job.batches > threshold;
 
         if (job.batches <= 500 && !job.metadata.hasStripeData) {
             const result = await this.perform(job.id);
