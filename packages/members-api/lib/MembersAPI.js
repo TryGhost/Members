@@ -119,7 +119,7 @@ module.exports = function MembersAPI({
         },
         labsService,
         stripeService: stripeAPIService,
-        verificationService: verificationTrigger
+        verificationTrigger: verificationTrigger
     });
 
     const geolocationService = new GeolocationSerice();

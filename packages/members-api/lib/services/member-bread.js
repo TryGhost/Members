@@ -23,7 +23,15 @@ const messages = {
  */
 
 /**
- * @typedef {object} IVerificationService
+ * @typedef {object} IVerificationResult
+ * @prop {boolean} needsVerification Whether to require verification
+ */
+
+/**
+ * @typedef {object} IVerificationTrigger
+ * @prop {() => number} getConfigThreshold
+ * @prop {() => Promise<number>} getImportThreshold
+ * @prop {(data: {amountImported: number, throwOnTrigger: boolean}) => Promise<IVerificationResult>} startVerificationProcess
  */
 
 module.exports = class MemberBREADService {
@@ -35,9 +43,9 @@ module.exports = class MemberBREADService {
      * @param {ILabsService} deps.labsService
      * @param {IEmailService} deps.emailService
      * @param {IStripeService} deps.stripeService
-     * @param {IVerificationService} deps.verificationService
+     * @param {IVerificationTrigger} deps.verificationTrigger
      */
-    constructor({memberRepository, eventRepository, labsService, emailService, stripeService, offersAPI, verificationService}) {
+    constructor({memberRepository, eventRepository, labsService, emailService, stripeService, offersAPI, verificationTrigger}) {
         this.offersAPI = offersAPI;
         /** @private */
         this.memberRepository = memberRepository;
@@ -50,7 +58,7 @@ module.exports = class MemberBREADService {
         /** @private */
         this.stripeService = stripeService;
         /** @private */
-        this.verificationService = verificationService;
+        this.verificationTrigger = verificationTrigger;
     }
 
     /**
@@ -219,7 +227,7 @@ module.exports = class MemberBREADService {
             throw error;
         }
 
-        const threshold = this.verificationService.getConfigThreshold();
+        const threshold = this.verificationTrigger.getConfigThreshold();
 
         if (isFinite(threshold)) {
             const createdAt = new Date();
@@ -230,8 +238,9 @@ module.exports = class MemberBREADService {
             });
 
             if (events.meta.pagination.total > threshold) {
-                await this.verificationService.startEmailVerification({
-                    importedNumber: events.meta.pagination.total
+                await this.verificationTrigger.startVerificationProcess({
+                    amountImported: events.meta.pagination.total,
+                    throwOnImported: false
                 });
             }
         }

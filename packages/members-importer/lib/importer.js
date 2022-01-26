@@ -12,6 +12,18 @@ const messages = {
     jobAlreadyComplete: 'Job is already complete.'
 };
 
+/**
+ * @typedef {object} IVerificationResult
+ * @prop {boolean} needsVerification Whether to require verification
+ */
+
+/**
+ * @typedef {object} IVerificationTrigger
+ * @prop {() => number} getConfigThreshold
+ * @prop {() => Promise<number>} getImportThreshold
+ * @prop {(data: {amountImported: number, throwOnTrigger: boolean}) => Promise<IVerificationResult>} startVerificationProcess
+ */
+
 module.exports = class MembersCSVImporter {
     /**
      * @param {Object} options
@@ -23,10 +35,7 @@ module.exports = class MembersCSVImporter {
      * @param {({name, at, job, data, offloaded}) => void} options.addJob - Method registering an async job
      * @param {Object} options.knex - An instance of the Ghost Database connection
      * @param {Function} options.urlFor - function generating urls
-     * @param {Object} options.verificationTrigger
-     * @param {() => number} options.verificationTrigger.getConfigThreshold
-     * @param {() => Promise<number>} options.verificationTrigger.getImportThreshold
-     * @param {({amountImported}) => Promise<{needsVerification: boolean}>} options.verificationTrigger.startEmailVerification
+     * @param {IVerificationTrigger} options.verificationTrigger
      */
     constructor({storagePath, getTimezone, getMembersApi, sendEmail, isSet, addJob, knex, urlFor, verificationTrigger}) {
         this._storagePath = storagePath;
