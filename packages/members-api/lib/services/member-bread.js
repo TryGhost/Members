@@ -22,43 +22,25 @@ const messages = {
  * @prop {boolean} configured
  */
 
-/**
- * @typedef {object} IVerificationResult
- * @prop {boolean} needsVerification Whether to require verification
- */
-
-/**
- * @typedef {object} IVerificationTrigger
- * @prop {() => number} getConfigThreshold
- * @prop {() => Promise<number>} getImportThreshold
- * @prop {(data: {amountImported: number, throwOnImported: boolean}) => Promise<IVerificationResult>} startVerificationProcess
- */
-
 module.exports = class MemberBREADService {
     /**
      * @param {object} deps
      * @param {import('../repositories/member')} deps.memberRepository
-     * @param {import('../repositories/event')} deps.eventRepository
      * @param {import('@tryghost/members-offers/lib/application/OffersAPI')} deps.offersAPI
      * @param {ILabsService} deps.labsService
      * @param {IEmailService} deps.emailService
      * @param {IStripeService} deps.stripeService
-     * @param {IVerificationTrigger} deps.verificationTrigger
      */
-    constructor({memberRepository, eventRepository, labsService, emailService, stripeService, offersAPI, verificationTrigger}) {
+    constructor({memberRepository, labsService, emailService, stripeService, offersAPI}) {
         this.offersAPI = offersAPI;
         /** @private */
         this.memberRepository = memberRepository;
-        /** @private */
-        this.eventRepository = eventRepository;
         /** @private */
         this.labsService = labsService;
         /** @private */
         this.emailService = emailService;
         /** @private */
         this.stripeService = stripeService;
-        /** @private */
-        this.verificationTrigger = verificationTrigger;
     }
 
     /**
@@ -225,24 +207,6 @@ module.exports = class MemberBREADService {
                 });
             }
             throw error;
-        }
-
-        const threshold = this.verificationTrigger.getConfigThreshold();
-
-        if (isFinite(threshold)) {
-            const createdAt = new Date();
-            createdAt.setDate(createdAt.getDate() - 30);
-            const events = await this.eventRepository.getNewsletterSubscriptionEvents({
-                // Date in last 30 days, source is API
-                filter: `source:api+created_at:>'${createdAt.toISOString().replace('T', ' ').substring(0, 19)}'`
-            });
-
-            if (events.meta.pagination.total > threshold) {
-                await this.verificationTrigger.startVerificationProcess({
-                    amountImported: events.meta.pagination.total,
-                    throwOnImported: false
-                });
-            }
         }
 
         try {
