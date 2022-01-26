@@ -31,7 +31,7 @@ const messages = {
  * @typedef {object} IVerificationTrigger
  * @prop {() => number} getConfigThreshold
  * @prop {() => Promise<number>} getImportThreshold
- * @prop {(data: {amountImported: number, throwOnTrigger: boolean}) => Promise<IVerificationResult>} startVerificationProcess
+ * @prop {(data: {amountImported: number, throwOnImported: boolean}) => Promise<IVerificationResult>} startVerificationProcess
  */
 
 module.exports = class MemberBREADService {
@@ -234,7 +234,7 @@ module.exports = class MemberBREADService {
             createdAt.setDate(createdAt.getDate() - 30);
             const events = await this.eventRepository.getNewsletterSubscriptionEvents({
                 // Date in last 30 days, source is API
-                filter: `source:api+created_at:>${Math.floor(createdAt.valueOf() / 1000)}`
+                filter: `source:api+created_at:>'${createdAt.toISOString().replace('T', ' ').substring(0, 19)}'`
             });
 
             if (events.meta.pagination.total > threshold) {
