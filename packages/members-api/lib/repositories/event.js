@@ -1,3 +1,6 @@
+const errors = require('@tryghost/errors');
+const nql = require('@nexes/nql');
+
 module.exports = class EventRepository {
     constructor({
         EmailRecipient,
@@ -24,14 +27,26 @@ module.exports = class EventRepository {
         });
     }
 
-    async getNewsletterSubscriptionEvents(options = {}) {
-        options.withRelated = ['member'];
+    async getNewsletterSubscriptionEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: []
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._MemberSubscribeEvent.findPage(options);
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'newsletter_event',
-                data: data.toJSON(options)
+                data: model.toJSON(options)
             };
         });
 
@@ -41,14 +56,26 @@ module.exports = class EventRepository {
         };
     }
 
-    async getSubscriptionEvents(options = {}) {
-        options.withRelated = ['member'];
+    async getSubscriptionEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: []
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._MemberPaidSubscriptionEvent.findPage(options);
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'subscription_event',
-                data: data.toJSON(options)
+                data: model.toJSON(options)
             };
         });
 
@@ -58,14 +85,26 @@ module.exports = class EventRepository {
         };
     }
 
-    async getPaymentEvents(options = {}) {
-        options.withRelated = ['member'];
+    async getPaymentEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: []
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._MemberPaymentEvent.findPage(options);
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'payment_event',
-                data: data.toJSON(options)
+                data: model.toJSON(options)
             };
         });
 
@@ -75,14 +114,26 @@ module.exports = class EventRepository {
         };
     }
 
-    async getLoginEvents(options = {}) {
-        options.withRelated = ['member'];
+    async getLoginEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: []
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._MemberLoginEvent.findPage(options);
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'login_event',
-                data: data.toJSON(options)
+                data: model.toJSON(options)
             };
         });
 
@@ -92,15 +143,26 @@ module.exports = class EventRepository {
         };
     }
 
-    async getSignupEvents(options = {}) {
-        options.withRelated = ['member'];
-        options.filter = 'from_status:null';
+    async getSignupEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: ['from_status:null']
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._MemberStatusEvent.findPage(options);
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'signup_event',
-                data: data.toJSON(options)
+                data: model.toJSON(options)
             };
         });
 
@@ -110,21 +172,32 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailDelieveredEvents(options = {}) {
-        options.withRelated = ['member', 'email'];
-        options.filter = 'delivered_at:-null';
+    async getEmailDelieveredEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member', 'email'],
+            filter: ['delivered_at:-null']
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'delivered_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
         );
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'email_delivered_event',
                 data: {
-                    member_id: data.get('member_id'),
-                    created_at: data.get('delivered_at'),
-                    member: data.related('member').toJSON(),
-                    email: data.related('email').toJSON()
+                    member_id: model.get('member_id'),
+                    created_at: model.get('delivered_at'),
+                    member: model.related('member').toJSON(),
+                    email: model.related('email').toJSON()
                 }
             };
         });
@@ -135,21 +208,32 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailOpenedEvents(options = {}) {
-        options.withRelated = ['member', 'email'];
-        options.filter = 'opened_at:-null';
+    async getEmailOpenedEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member', 'email'],
+            filter: ['opened_at:-null']
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'opened_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
         );
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'email_opened_event',
                 data: {
-                    member_id: data.get('member_id'),
-                    created_at: data.get('opened_at'),
-                    member: data.related('member').toJSON(),
-                    email: data.related('email').toJSON()
+                    member_id: model.get('member_id'),
+                    created_at: model.get('opened_at'),
+                    member: model.related('member').toJSON(),
+                    email: model.related('email').toJSON()
                 }
             };
         });
@@ -160,21 +244,32 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailFailedEvents(options = {}) {
-        options.withRelated = ['member', 'email'];
-        options.filter = 'failed_at:-null';
+    async getEmailFailedEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member', 'email'],
+            filter: ['failed_at:-null']
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'failed_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
         );
 
-        const data = models.map((data) => {
+        const data = models.map((model) => {
             return {
                 type: 'email_failed_event',
                 data: {
-                    member_id: data.get('member_id'),
-                    created_at: data.get('failed_at'),
-                    member: data.related('member').toJSON(),
-                    email: data.related('email').toJSON()
+                    member_id: model.get('member_id'),
+                    created_at: model.get('failed_at'),
+                    member: model.related('member').toJSON(),
+                    email: model.related('email').toJSON()
                 }
             };
         });
@@ -183,6 +278,63 @@ module.exports = class EventRepository {
             data,
             meta
         };
+    }
+
+    /**
+     * Extract a subset of NQL.
+     * There are only a few properties allowed.
+     * Parenthesis are forbidden.
+     * Only ANDs are supported when combining properties.
+     */
+    getNQLSubset(filter) {
+        if (!filter) {
+            return {};
+        }
+
+        const lex = nql(filter).lex();
+
+        const allowedFilters = ['type','data.created_at','data.member_id'];
+        const properties = lex
+            .filter(x => x.token === 'PROP')
+            .map(x => x.matched.slice(0, -1));
+        if (properties.some(prop => !allowedFilters.includes(prop))) {
+            throw new errors.IncorrectUsageError({
+                message: 'The only allowed filters are `type`, `data.created_at` and `data.member_id`'
+            });
+        }
+
+        if (lex.find(x => x.token === 'LPAREN')) {
+            throw new errors.IncorrectUsageError({
+                message: 'The filter can\'t contain parenthesis.'
+            });
+        }
+
+        const jsonFilter = nql(filter).toJSON();
+        const keys = Object.keys(jsonFilter);
+
+        if (keys.length === 1 && keys[0] === '$or') {
+            throw new errors.IncorrectUsageError({
+                message: 'The top level-filters can only combined with ANDs (+) and not ORs (,).'
+            });
+        }
+
+        // The filter is validated, it only contains one level of filters concatenated with `+`
+        const filters = filter.split('+');
+
+        /** @type {Object.<string, string>} */
+        let result = {};
+
+        for (const f of filters) {
+            // dirty way to parse a property, but it works according to https://github.com/NexesJS/NQL-Lang/blob/0e12d799a3a9c4d8651444e9284ce16c19cbc4f0/src/nql.l#L18
+            const key = f.split(':')[0];
+            if (!result[key]) {
+                result[key] = f;
+            } else {
+                result[key] += '+' + f;
+            }
+        }
+
+        return result;
     }
 
     async getEventTimeline(options = {}) {
@@ -192,24 +344,38 @@ module.exports = class EventRepository {
 
         options.order = 'created_at desc';
 
-        const pages = [
-            this.getNewsletterSubscriptionEvents(options),
-            this.getSubscriptionEvents(options),
-            this.getLoginEvents(options),
-            this.getSignupEvents(options)
+        // Create a list of all events that can be queried
+        const pageActions = [
+            {type: 'newsletter_event', action: 'getNewsletterSubscriptionEvents'},
+            {type: 'subscription_event', action: 'getSubscriptionEvents'},
+            {type: 'login_event', action: 'getLoginEvents'},
+            {type: 'signup_event', action: 'getSignupEvents'}
         ];
         if (this._labsService.isSet('membersActivityFeed') && this._EmailRecipient) {
-            pages.push(this.getEmailDelieveredEvents(options));
-            pages.push(this.getEmailOpenedEvents(options));
-            pages.push(this.getEmailFailedEvents(options));
+            pageActions.push({type: 'email_delivered_event', action: 'getEmailDelieveredEvents'});
+            pageActions.push({type: 'email_opened_event', action: 'getEmailOpenedEvents'});
+            pageActions.push({type: 'email_failed_event', action: 'getEmailFailedEvents'});
         }
+
+        let filters = this.getNQLSubset(options.filter);
+
+        //Filter events to query
+        const filteredPages = filters.type ? pageActions.filter(page => nql(filters.type).queryJSON(page)) : pageActions;
+
+        //Start the promises
+        const pages = filteredPages.map(page => this[page.action](options, filters));
+
         const allEventPages = await Promise.all(pages);
 
-        const allEvents = allEventPages.reduce((allEvents, page) => allEvents.concat(page.data), []);
+        const allEvents = allEventPages.reduce((accumulator, page) => accumulator.concat(page.data), []);
 
         return allEvents.sort((a, b) => {
             return new Date(b.data.created_at) - new Date(a.data.created_at);
         }).reduce((memo, event, i) => {
+            if (this._labsService.isSet('membersActivityFeed')) {
+                //disable the event filtering
+                return memo.concat(event);
+            }
             if (event.type === 'newsletter_event' && event.data.subscribed) {
                 const previousEvent = allEvents[i - 1];
                 const nextEvent = allEvents[i + 1];
@@ -242,16 +408,16 @@ module.exports = class EventRepository {
 
         const resultsJSON = results.toJSON();
 
-        const cumulativeResults = resultsJSON.reduce((cumulativeResults, result, index) => {
+        const cumulativeResults = resultsJSON.reduce((accumulator, result, index) => {
             if (index === 0) {
                 return [{
                     date: result.date,
                     subscribed: result.subscribed_delta
                 }];
             }
-            return cumulativeResults.concat([{
+            return accumulator.concat([{
                 date: result.date,
-                subscribed: result.subscribed_delta + cumulativeResults[index - 1].subscribed
+                subscribed: result.subscribed_delta + accumulator[index - 1].subscribed
             }]);
         }, []);
 
@@ -265,10 +431,10 @@ module.exports = class EventRepository {
 
         const resultsJSON = results.toJSON();
 
-        const cumulativeResults = resultsJSON.reduce((cumulativeResults, result) => {
-            if (!cumulativeResults[result.currency]) {
+        const cumulativeResults = resultsJSON.reduce((accumulator, result) => {
+            if (!accumulator[result.currency]) {
                 return {
-                    ...cumulativeResults,
+                    ...accumulator,
                     [result.currency]: [{
                         date: result.date,
                         mrr: result.mrr_delta,
@@ -277,10 +443,10 @@ module.exports = class EventRepository {
                 };
             }
             return {
-                ...cumulativeResults,
-                [result.currency]: cumulativeResults[result.currency].concat([{
+                ...accumulator,
+                [result.currency]: accumulator[result.currency].concat([{
                     date: result.date,
-                    mrr: result.mrr_delta + cumulativeResults[result.currency].slice(-1)[0].mrr,
+                    mrr: result.mrr_delta + accumulator[result.currency].slice(-1)[0].mrr,
                     currency: result.currency
                 }])
             };
@@ -296,10 +462,10 @@ module.exports = class EventRepository {
 
         const resultsJSON = results.toJSON();
 
-        const cumulativeResults = resultsJSON.reduce((cumulativeResults, result) => {
-            if (!cumulativeResults[result.currency]) {
+        const cumulativeResults = resultsJSON.reduce((accumulator, result) => {
+            if (!accumulator[result.currency]) {
                 return {
-                    ...cumulativeResults,
+                    ...accumulator,
                     [result.currency]: [{
                         date: result.date,
                         volume: result.volume_delta,
@@ -308,10 +474,10 @@ module.exports = class EventRepository {
                 };
             }
             return {
-                ...cumulativeResults,
-                [result.currency]: cumulativeResults[result.currency].concat([{
+                ...accumulator,
+                [result.currency]: accumulator[result.currency].concat([{
                     date: result.date,
-                    volume: result.volume_delta + cumulativeResults[result.currency].slice(-1)[0].volume,
+                    volume: result.volume_delta + accumulator[result.currency].slice(-1)[0].volume,
                     currency: result.currency
                 }])
             };
@@ -327,7 +493,7 @@ module.exports = class EventRepository {
 
         const resultsJSON = results.toJSON();
 
-        const cumulativeResults = resultsJSON.reduce((cumulativeResults, result, index) => {
+        const cumulativeResults = resultsJSON.reduce((accumulator, result, index) => {
             if (index === 0) {
                 return [{
                     date: result.date,
@@ -336,11 +502,11 @@ module.exports = class EventRepository {
                     free: result.free_delta
                 }];
             }
-            return cumulativeResults.concat([{
+            return accumulator.concat([{
                 date: result.date,
-                paid: result.paid_delta + cumulativeResults[index - 1].paid,
-                comped: result.comped_delta + cumulativeResults[index - 1].comped,
-                free: result.free_delta + cumulativeResults[index - 1].free
+                paid: result.paid_delta + accumulator[index - 1].paid,
+                comped: result.comped_delta + accumulator[index - 1].comped,
+                free: result.free_delta + accumulator[index - 1].free
             }]);
         }, []);
 
