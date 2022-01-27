@@ -388,11 +388,6 @@
     "@tryghost/root-utils" "^0.3.7"
     debug "^4.3.1"
 
-"@tryghost/domain-events@^0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/domain-events/-/domain-events-0.1.6.tgz#eb7ce76b6bf242d0544097f843525c0f502ce892"
-  integrity sha512-Ku34m1LMKSUyFWIFqx0ldAq/blO6q1dplMKdt201Kl06TJqvIO5ZTPaw+q1jmF093ul9aghabnn3DDroJ4rxow==
-
 "@tryghost/elasticsearch@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@tryghost/elasticsearch/-/elasticsearch-1.0.0.tgz#287167c7dd130fa36eb25347a6e1297d12c2de05"
@@ -464,11 +459,6 @@
     gelf-stream "^1.1.1"
     json-stringify-safe "^5.0.1"
     lodash "^4.17.21"
-
-"@tryghost/member-events@^0.3.3":
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/member-events/-/member-events-0.3.3.tgz#96da2ffe762a30571e4bad4c75488f20681e8730"
-  integrity sha512-Mi94RMnGJFL0hzhPWpYVAfQBAG4eIBcaJR4Dghy2s6wfUGCaV3iZftyNcHvmCezN5tfrLAmQt6b/fI+NYrK/9Q==
 
 "@tryghost/pretty-stream@^0.1.2":
   version "0.1.2"
@@ -1026,60 +1016,6 @@ c8@7.11.0:
     find-up "^5.0.0"
     foreground-child "^2.0.0"
     istanbul-lib-coverage "^3.0.1"
-    istanbul-lib-report "^3.0.0"
-    istanbul-reports "^3.0.2"
-    rimraf "^3.0.0"
-    test-exclude "^6.0.0"
-    v8-to-istanbul "^8.0.0"
-    yargs "^16.2.0"
-    yargs-parser "^20.2.7"
-
-c8@7.11.0:
-  version "7.11.0"
-  resolved "https://registry.yarnpkg.com/c8/-/c8-7.11.0.tgz#b3ab4e9e03295a102c47ce11d4ef6d735d9a9ac9"
-  integrity sha512-XqPyj1uvlHMr+Y1IeRndC2X5P7iJzJlEJwBpCdBbq2JocXOgJfr+JVfJkyNMGROke5LfKrhSFXGFXnwnRJAUJw==
-  dependencies:
-    "@bcoe/v8-coverage" "^0.2.3"
-    "@istanbuljs/schema" "^0.1.2"
-    find-up "^5.0.0"
-    foreground-child "^2.0.0"
-    istanbul-lib-coverage "^3.0.1"
-    istanbul-lib-report "^3.0.0"
-    istanbul-reports "^3.0.2"
-    rimraf "^3.0.0"
-    test-exclude "^6.0.0"
-    v8-to-istanbul "^8.0.0"
-    yargs "^16.2.0"
-    yargs-parser "^20.2.7"
-
-c8@7.8.0:
-  version "7.8.0"
-  resolved "https://registry.yarnpkg.com/c8/-/c8-7.8.0.tgz#8fcfe848587d9d5796f22e9b0546a387a66d1b3b"
-  integrity sha512-x2Bx+IIEd608B1LmjiNQ/kizRPkCWo5XzuV57J9afPjAHSnYXALwbCSOkQ7cSaNXBNblfqcvdycj+klmL+j6yA==
-  dependencies:
-    "@bcoe/v8-coverage" "^0.2.3"
-    "@istanbuljs/schema" "^0.1.2"
-    find-up "^5.0.0"
-    foreground-child "^2.0.0"
-    istanbul-lib-coverage "^3.0.0"
-    istanbul-lib-report "^3.0.0"
-    istanbul-reports "^3.0.2"
-    rimraf "^3.0.0"
-    test-exclude "^6.0.0"
-    v8-to-istanbul "^8.0.0"
-    yargs "^16.2.0"
-    yargs-parser "^20.2.7"
-
-c8@7.9.0:
-  version "7.9.0"
-  resolved "https://registry.yarnpkg.com/c8/-/c8-7.9.0.tgz#e63b9a22c8b4adbf6a8c8cb6194ee086b3e13c24"
-  integrity sha512-aQ7dC8gASnKdBwHUuYuzsdKCEDrKnWr7ZuZUnf4CNAL81oyKloKrs7H7zYvcrmCtIrMToudBSUhq2q+LLBMvgg==
-  dependencies:
-    "@bcoe/v8-coverage" "^0.2.3"
-    "@istanbuljs/schema" "^0.1.2"
-    find-up "^5.0.0"
-    foreground-child "^2.0.0"
-    istanbul-lib-coverage "^3.0.0"
     istanbul-lib-report "^3.0.0"
     istanbul-reports "^3.0.2"
     rimraf "^3.0.0"
