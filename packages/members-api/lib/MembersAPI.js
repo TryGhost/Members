@@ -56,8 +56,7 @@ module.exports = function MembersAPI({
     },
     stripeAPIService,
     offersAPI,
-    labsService,
-    verificationTrigger
+    labsService
 }) {
     const tokenService = new TokenService({
         privateKey,
@@ -105,7 +104,6 @@ module.exports = function MembersAPI({
     const memberBREADService = new MemberBREADService({
         offersAPI,
         memberRepository,
-        eventRepository,
         emailService: {
             async sendEmailWithMagicLink({email, requestedType}) {
                 return sendEmailWithMagicLink({
@@ -118,8 +116,7 @@ module.exports = function MembersAPI({
             }
         },
         labsService,
-        stripeService: stripeAPIService,
-        verificationTrigger: verificationTrigger
+        stripeService: stripeAPIService
     });
 
     const geolocationService = new GeolocationSerice();

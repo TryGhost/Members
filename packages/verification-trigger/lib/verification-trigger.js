@@ -66,12 +66,16 @@ class VerificationTrigger {
         }
     }
 
+    /** @typedef IVerificationResult
+     * @property {boolean} needsVerification Whether the verification workflow was triggered
+     */
+
     /**
      * 
      * @param {object} config
      * @param {number} config.amountImported Amount of members which were imported
      * @param {boolean} config.throwOnTrigger Whether to throw if verification is needed
-     * @returns {Promise<object>} Object containing property "needsVerification" - true when triggered 
+     * @returns {Promise<IVerificationResult>} Object containing property "needsVerification" - true when triggered 
      */
     async startVerificationProcess({
         amountImported,
