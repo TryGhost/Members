@@ -1,5 +1,24 @@
+const {flowRight} = require('lodash');
 const errors = require('@tryghost/errors');
 const nql = require('@nexes/nql');
+const {mapQuery} = require('@nexes/mongo-utils');
+
+const renameDataKeys = input => mapQuery(input, function (value, key) {
+    if (key === 'data.created_at') {
+        return {
+            created_at: value
+        };
+    }
+    if (key === 'data.member_id') {
+        return {
+            member_id: value
+        };
+    }
+
+    return {
+        [key]: value
+    };
+});
 
 module.exports = class EventRepository {
     constructor({
@@ -27,19 +46,14 @@ module.exports = class EventRepository {
         });
     }
 
-    async getNewsletterSubscriptionEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member'],
-            filter: []
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+    async getNewsletterSubscriptionEvents(options = {}) {
+        options.withRelated = ['member'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
-        }
-        options.filter = options.filter.join('+');
 
         const {data: models, meta} = await this._MemberSubscribeEvent.findPage(options);
 
@@ -56,19 +70,14 @@ module.exports = class EventRepository {
         };
     }
 
-    async getSubscriptionEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member'],
-            filter: []
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+    async getSubscriptionEvents(options = {}) {
+        options.withRelated = ['member'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
-        }
-        options.filter = options.filter.join('+');
 
         const {data: models, meta} = await this._MemberPaidSubscriptionEvent.findPage(options);
 
@@ -85,19 +94,14 @@ module.exports = class EventRepository {
         };
     }
 
-    async getPaymentEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member'],
-            filter: []
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+    async getPaymentEvents(options = {}) {
+        options.withRelated = ['member'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
-        }
-        options.filter = options.filter.join('+');
 
         const {data: models, meta} = await this._MemberPaymentEvent.findPage(options);
 
@@ -114,19 +118,14 @@ module.exports = class EventRepository {
         };
     }
 
-    async getLoginEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member'],
-            filter: []
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+    async getLoginEvents(options = {}) {
+        options.withRelated = ['member'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
-        }
-        options.filter = options.filter.join('+');
 
         const {data: models, meta} = await this._MemberLoginEvent.findPage(options);
 
@@ -143,19 +142,20 @@ module.exports = class EventRepository {
         };
     }
 
-    async getSignupEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member'],
-            filter: ['from_status:null']
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+    async getSignupEvents(options = {}) {
+        options.withRelated = ['member'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+
+        if (options.filter) {
+            options.filter = `(${options.filter})+from_status:null`;
+        } else {
+            options.filter = 'from_status:null';
         }
-        options.filter = options.filter.join('+');
 
         const {data: models, meta} = await this._MemberStatusEvent.findPage(options);
 
@@ -172,20 +172,24 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailDeliveredEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member', 'email'],
-            filter: ['delivered_at:-null']
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'delivered_at:'));
+    async getEmailDeliveredEvents(options = {}) {
+        options.withRelated = ['member', 'email'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+
+        if (options.filter) {
+            options.filter = `(${options.filter})+delivered_at:-null`;
+        } else {
+            options.filter = 'delivered_at:-null';
         }
-        options.filter = options.filter.join('+');
-        options.order = options.order.replace(/created_at/g, 'delivered_at');
+
+        if (options.order) {
+            options.order = options.order.replace(/created_at/g, 'delivered_at');
+        }
 
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
@@ -209,20 +213,24 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailOpenedEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member', 'email'],
-            filter: ['opened_at:-null']
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'opened_at:'));
+    async getEmailOpenedEvents(options = {}) {
+        options.withRelated = ['member', 'email'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+
+        if (options.filter) {
+            options.filter = `(${options.filter})+opened_at:-null`;
+        } else {
+            options.filter = 'opened_at:-null';
         }
-        options.filter = options.filter.join('+');
-        options.order = options.order.replace(/created_at/g, 'opened_at');
+
+        if (options.order) {
+            options.order = options.order.replace(/created_at/g, 'opened_at');
+        }
 
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
@@ -246,20 +254,24 @@ module.exports = class EventRepository {
         };
     }
 
-    async getEmailFailedEvents(options = {}, filters = {}) {
-        options = {
-            ...options,
-            withRelated: ['member', 'email'],
-            filter: ['failed_at:-null']
-        };
-        if (filters['data.created_at']) {
-            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'failed_at:'));
+    async getEmailFailedEvents(options = {}) {
+        options.withRelated = ['member', 'email'];
+
+        if (options.mongoTransformer) {
+            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+        } else {
+            options.mongoTransformer = renameDataKeys;
         }
-        if (filters['data.member_id']) {
-            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+
+        if (options.filter) {
+            options.filter = `(${options.filter})+failed_at:-null`;
+        } else {
+            options.filter = 'failed_at:-null';
         }
-        options.filter = options.filter.join('+');
-        options.order = options.order.replace(/created_at/g, 'failed_at');
+
+        if (options.order) {
+            options.order = options.order.replace(/created_at/g, 'failed_at');
+        }
 
         const {data: models, meta} = await this._EmailRecipient.findPage(
             options
@@ -289,7 +301,7 @@ module.exports = class EventRepository {
      * Parenthesis are forbidden.
      * Only ANDs are supported when combining properties.
      */
-    getNQLSubset(filter) {
+    validateAndParseEventTimelineFilter(filter) {
         if (!filter) {
             return {};
         }
@@ -363,13 +375,25 @@ module.exports = class EventRepository {
             pageActions.push({type: 'email_failed_event', action: 'getEmailFailedEvents'});
         }
 
-        let filters = this.getNQLSubset(options.filter);
+        let filters = this.validateAndParseEventTimelineFilter(options.filter);
 
         //Filter events to query
         const filteredPages = filters.type ? pageActions.filter(page => nql(filters.type).queryJSON(page)) : pageActions;
 
+        const rejectTypeFilters = input => mapQuery(input, function (value, key) {
+            if (key === 'type') {
+                return;
+            }
+            return {
+                [key]: value
+            };
+        });
+
         //Start the promises
-        const pages = filteredPages.map(page => this[page.action](options, filters));
+        const pages = filteredPages.map(page => this[page.action]({
+            ...options,
+            mongoTransformer: rejectTypeFilters
+        }));
 
         const allEventPages = await Promise.all(pages);
 
