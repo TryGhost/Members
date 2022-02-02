@@ -20,6 +20,17 @@ const renameDataKeys = input => mapQuery(input, function (value, key) {
     };
 });
 
+const createRenameTransformer = (from, to) => input => mapQuery(input, function (value, key) {
+    if (key === from) {
+        return {
+            [to]: value
+        };
+    }
+    return {
+        [key]: value
+    };
+});
+
 module.exports = class EventRepository {
     constructor({
         EmailRecipient,
@@ -176,9 +187,16 @@ module.exports = class EventRepository {
         options.withRelated = ['member', 'email'];
 
         if (options.mongoTransformer) {
-            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+            options.mongoTransformer = flowRight(
+                options.mongoTransformer,
+                createRenameTransformer('created_at', 'delivered_at'),
+                renameDataKeys
+            );
         } else {
-            options.mongoTransformer = renameDataKeys;
+            options.mongoTransformer = flowRight(
+                createRenameTransformer('created_at', 'delivered_at'),
+                renameDataKeys
+            );
         }
 
         if (options.filter) {
@@ -217,9 +235,16 @@ module.exports = class EventRepository {
         options.withRelated = ['member', 'email'];
 
         if (options.mongoTransformer) {
-            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+            options.mongoTransformer = flowRight(
+                options.mongoTransformer,
+                createRenameTransformer('created_at', 'opened_at'),
+                renameDataKeys
+            );
         } else {
-            options.mongoTransformer = renameDataKeys;
+            options.mongoTransformer = flowRight(
+                createRenameTransformer('created_at', 'opened_at'),
+                renameDataKeys
+            );
         }
 
         if (options.filter) {
@@ -258,9 +283,16 @@ module.exports = class EventRepository {
         options.withRelated = ['member', 'email'];
 
         if (options.mongoTransformer) {
-            options.mongoTransformer = flowRight(options.mongoTransformer, renameDataKeys);
+            options.mongoTransformer = flowRight(
+                options.mongoTransformer,
+                createRenameTransformer('created_at', 'failed_at'),
+                renameDataKeys
+            );
         } else {
-            options.mongoTransformer = renameDataKeys;
+            options.mongoTransformer = flowRight(
+                createRenameTransformer('created_at', 'failed_at'),
+                renameDataKeys
+            );
         }
 
         if (options.filter) {
