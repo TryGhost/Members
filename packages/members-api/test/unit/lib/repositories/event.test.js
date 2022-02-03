@@ -3,20 +3,40 @@ const EventRepository = require('../../../../lib/repositories/event');
 const sinon = require('sinon');
 const errors = require('@tryghost/errors');
 
+process.env.database__client = 'sqlite3';
+process.env.database__connection__filename = ':memory:';
+
+const models = require('ghost/core/server/models');
+const schema = require('ghost/core/server/data/schema');
+
 describe('EventRepository', function () {
     describe('validateAndParseEventTimelineFilter', function () {
         let eventRepository;
 
-        before(function () {
+        before(async function () {
+            await models.init();
+            for (const table of Object.keys(schema.tables)) {
+                await schema.commands.createTable(table);
+            }
             eventRepository = new EventRepository({
-                EmailRecipient: null,
-                MemberSubscribeEvent: null,
-                MemberPaymentEvent: null,
-                MemberStatusEvent: null,
-                MemberLoginEvent: null,
-                MemberPaidSubscriptionEvent: null,
+                EmailRecipient: models.EmailRecipient,
+                MemberSubscribeEvent: models.MemberSubscribeEvent,
+                MemberPaymentEvent: models.MemberPaymentEvent,
+                MemberStatusEvent: models.MemberStatusEvent,
+                MemberLoginEvent: models.MemberLoginEvent,
+                MemberPaidSubscriptionEvent: models.MemberPaidSubscriptionEvent,
                 labsService: null
             });
+        });
+
+        after(function () {
+            require('ghost/core/server/data/db/connection').destroy();
+        });
+
+        it('Can fetch a single event', async function () {
+            const member = await models.Member.add({email: 'testing@member.com'});
+            const res = await models.MemberLoginEvent.add({member_id: member.id});
+            console.log(res);
         });
 
         it('throws when processing a filter with parenthesis', function () {
