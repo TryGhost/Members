@@ -47,6 +47,7 @@ class MagicLink {
      * @param {object} options
      * @param {string} options.email - The email to send magic link to
      * @param {string} options.requestSrc - The source magic link was requested from
+     * @param {string} options.referer - The url of the page the link was requested from
      * @param {TokenData} options.tokenData - The data for token
      * @param {string=} [options.type='signin'] - The type to be passed to the url and content generator functions
      * @returns {Promise<{token: Token, info: SentMessageInfo}>}
@@ -56,8 +57,9 @@ class MagicLink {
 
         const type = options.type || 'signin';
         const requestSrc = options.requestSrc || '';
+        const referer = Buffer.from(options.referer).toString('base64') || '';
 
-        const url = this.getSigninURL(token, type, requestSrc);
+        const url = `${this.getSigninURL(token, type, requestSrc)}&referer=${referer}`;
 
         const info = await this.transporter.sendMail({
             to: options.email,
