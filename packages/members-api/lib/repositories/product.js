@@ -4,7 +4,9 @@ const tpl = require('@tryghost/tpl');
 const messages = {
     priceMustBeInteger: 'Tier prices must be an integer.',
     priceIsNegative: 'Tier prices must not be negative',
-    maxPriceExceeded: 'Tier prices may not exceed 999999.99'
+    maxPriceExceeded: 'Tier prices may not exceed 999999.99',
+    benefitNameRequired: 'Benefit name is required',
+    benefitNameMustBeString: 'Benefit name must be a string'
 };
 
 /**
@@ -43,6 +45,27 @@ function validatePrice(price) {
     if (price.amount > 9999999999) {
         throw new ValidationError({
             message: tpl(messages.maxPriceExceeded)
+        });
+    }
+}
+
+/**
+ * @param {BenefitInput} benefit
+ */
+function validateBenefit(benefit) {
+    if (!benefit.name) {
+        throw new ValidationError({
+            message: tpl(messages.benefitNameRequired)
+        });
+    }
+    if (typeof benefit.name !== 'string') {
+        throw new ValidationError({
+            message: tpl(messages.benefitNameMustBeString)
+        });
+    }
+    if (benefit.name.length === 0) {
+        throw new ValidationError({
+            message: tpl(messages.benefitNameRequired)
         });
     }
 }
@@ -172,6 +195,10 @@ class ProductRepository {
 
         if (data.stripe_prices) {
             data.stripe_prices.forEach(validatePrice);
+        }
+
+        if (data.benefits) {
+            data.benefits.forEach(validateBenefit);
         }
 
         const productData = {
@@ -322,6 +349,10 @@ class ProductRepository {
 
         if (data.stripe_prices) {
             data.stripe_prices.forEach(validatePrice);
+        }
+
+        if (data.benefits) {
+            data.benefits.forEach(validateBenefit);
         }
 
         const productId = data.id || options.id;
