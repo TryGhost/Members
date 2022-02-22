@@ -57,6 +57,14 @@ module.exports = class RouterController {
         }
     }
 
+    isComplimentarySubscription(sub) {
+        return sub.get('plan_nickname') === 'Complimentary';
+    }
+
+    isActiveSubscription(sub) {
+        return ['active', 'trialing', 'unpaid', 'past_due'].includes(sub.get('status'));
+    }
+
     async createCheckoutSetupSession(req, res) {
         const identity = req.body.identity;
 
@@ -233,8 +241,16 @@ module.exports = class RouterController {
         }
 
         if (member.related('products').length !== 0) {
-            res.writeHead(403);
-            return res.end('No permission');
+            const subscriptions = await member.related('stripeSubscriptions').fetch();
+            const hasActivePaidSub = (subscriptions.models || []).find((subscription) => {
+                return this.isActiveSubscription(subscription) && !this.isComplimentarySubscription(subscription);
+            });
+
+            // Members on active paid subscriptions are not allowed to create checkout session
+            if (hasActivePaidSub) {
+                res.writeHead(403);
+                return res.end('No permission');
+            }
         }
 
         let stripeCustomer;
