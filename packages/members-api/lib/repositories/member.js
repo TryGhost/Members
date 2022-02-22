@@ -725,6 +725,13 @@ module.exports = class MemberRepository {
                     }
                 }
             }
+
+            // Remove complimentary products for member if upgraded to paid sub
+            if (member.get('status') === 'comped' && status === 'paid' && ghostProduct) {
+                memberProducts = memberProducts.filter((product) => {
+                    return product.id === ghostProduct.id;
+                });
+            }
         } else {
             const subscriptions = await member.related('stripeSubscriptions').fetch(options);
             let activeSubscriptionForGhostProduct = false;
