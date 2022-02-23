@@ -214,7 +214,15 @@
     "@elastic/elasticsearch" "7.17.0"
     "@tryghost/debug" "^0.1.12"
 
-"@tryghost/errors@1.2.2", "@tryghost/errors@^1.0.0", "@tryghost/errors@^1.1.0", "@tryghost/errors@^1.1.1":
+"@tryghost/errors@1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.3.tgz#dccfcd09e175e4f0e437039a2653119f84b41e70"
+  integrity sha512-6vd5s2tKX4uQoKjwyP7rICPVY3jj9balc5XLcmwQjUm4yuRAL9AAcpbf1O4AwNN1gs/cN+Wknxjk/LeeIvGbGA==
+  dependencies:
+    lodash "^4.17.21"
+    uuid "^8.3.2"
+
+"@tryghost/errors@^1.0.0", "@tryghost/errors@^1.1.0", "@tryghost/errors@^1.1.1":
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.2.tgz#643009ba20770279577fe2778cdf1f816ad13e90"
   integrity sha512-81PnsWWayCLQgeBYpslyrMRmSIuflarxxR4tz7ZOIuptybAiKaD3S4GhTZLAXUOi38S62wJBoS/qTzRF6sIzng==
