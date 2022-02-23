@@ -240,17 +240,10 @@ module.exports = class RouterController {
             return res.end(JSON.stringify(sessionInfo));
         }
 
-        if (member.related('products').length !== 0) {
-            const subscriptions = await member.related('stripeSubscriptions').fetch();
-            const hasActivePaidSub = (subscriptions.models || []).find((subscription) => {
-                return this.isActiveSubscription(subscription) && !this.isComplimentarySubscription(subscription);
-            });
-
-            // Members on active paid subscriptions are not allowed to create checkout session
-            if (hasActivePaidSub) {
-                res.writeHead(403);
-                return res.end('No permission');
-            }
+        // Paid members are not allowed to create checkout session
+        if (member.get('status') === 'paid') {
+            res.writeHead(403);
+            return res.end('No permission');
         }
 
         let stripeCustomer;
