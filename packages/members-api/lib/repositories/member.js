@@ -682,6 +682,7 @@ module.exports = class MemberRepository {
 
         let memberProducts = (await member.related('products').fetch(options)).toJSON();
         const oldMemberProducts = member.related('products').toJSON();
+
         let status = memberProducts.length === 0 ? 'free' : 'comped';
         if (this.isActiveSubscriptionStatus(subscription.status)) {
             if (this.isComplimentarySubscription(subscription)) {
@@ -689,48 +690,10 @@ module.exports = class MemberRepository {
             } else {
                 status = 'paid';
             }
-            // This is an active subscription! Add the product
+
+            // This is an active subscription! Update the product
             if (ghostProduct) {
-                memberProducts.push(ghostProduct.toJSON());
-            }
-            if (model) {
-                if (model.get('stripe_price_id') !== subscriptionData.stripe_price_id) {
-                    // The subscription has changed plan - we may need to update the products
-
-                    const subscriptions = await member.related('stripeSubscriptions').fetch(options);
-                    const changedProduct = await this._productRepository.get({
-                        stripe_price_id: model.get('stripe_price_id')
-                    }, options);
-
-                    let activeSubscriptionForChangedProduct = false;
-
-                    for (const subscription of subscriptions.models) {
-                        if (this.isActiveSubscriptionStatus(subscription.get('status'))) {
-                            try {
-                                const subscriptionProduct = await this._productRepository.get({stripe_price_id: subscription.get('stripe_price_id')}, options);
-                                if (subscriptionProduct && changedProduct && subscriptionProduct.id === changedProduct.id) {
-                                    activeSubscriptionForChangedProduct = true;
-                                }
-                            } catch (e) {
-                                logging.error(`Failed to attach products to member - ${data.id}`);
-                                logging.error(e);
-                            }
-                        }
-                    }
-
-                    if (!activeSubscriptionForChangedProduct) {
-                        memberProducts = memberProducts.filter((product) => {
-                            return product.id !== changedProduct.id;
-                        });
-                    }
-                }
-            }
-
-            // Remove complimentary products for member if upgraded to paid sub
-            if (member.get('status') === 'comped' && status === 'paid' && ghostProduct) {
-                memberProducts = memberProducts.filter((product) => {
-                    return product.id === ghostProduct.id;
-                });
+                memberProducts = [ghostProduct.toJSON()];
             }
         } else {
             const subscriptions = await member.related('stripeSubscriptions').fetch(options);
