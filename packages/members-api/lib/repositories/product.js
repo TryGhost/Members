@@ -15,20 +15,23 @@ const messages = {
 
 /**
  * @typedef {object} StripePriceInput
- * @param {string} nickname
- * @param {string} currency
- * @param {number} amount
- * @param {'recurring'|'one-time'} type
- * @param {string | null} interval
- * @param {string?} stripe_product_id
- * @param {string?} stripe_price_id
+ * @property {string} nickname
+ * @property {string} currency
+ * @property {number} amount
+ * @property {'recurring'|'one-time'} type
+ * @property {string | null} interval
+ * @property {string?} stripe_product_id
+ * @property {string?} stripe_price_id
  */
 
 /**
  * @typedef {object} BenefitInput
- * @param {string} name
+ * @property {string} name
  */
 
+/**
+ * @param {StripePriceInput} price
+ */
 function validatePrice(price) {
     if (!Number.isInteger(price.amount)) {
         throw new ValidationError({
