@@ -179,7 +179,7 @@ class ProductRepository {
         const productData = {
             type: 'paid',
             active: true,
-            visibility: data.visibility || false,
+            visibility: data.visibility,
             name: data.name,
             description: data.description,
             benefits: data.benefits,
