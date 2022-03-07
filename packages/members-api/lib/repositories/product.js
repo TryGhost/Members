@@ -134,7 +134,7 @@ class ProductRepository {
      * @param {object} data
      * @param {string} data.name
      * @param {string} data.description
-     * @param {boolean} data.visibility
+     * @param {'public'|'none'} data.visibility
      * @param {string} data.welcome_page_url
      * @param {BenefitInput[]} data.benefits
      * @param {StripePriceInput[]} data.stripe_prices
@@ -288,7 +288,7 @@ class ProductRepository {
      * @param {string} data.id
      * @param {string} data.name
      * @param {string} data.description
-     * @param {boolean} data.visibility
+     * @param {'public'|'none'} data.visibility
      * @param {string} data.welcome_page_url
      * @param {BenefitInput[]} data.benefits
      *
