@@ -4,6 +4,7 @@ const nql = require('@nexes/nql');
 module.exports = class EventRepository {
     constructor({
         EmailRecipient,
+        MemberCancelEvent,
         MemberSubscribeEvent,
         MemberPaymentEvent,
         MemberStatusEvent,
@@ -11,6 +12,7 @@ module.exports = class EventRepository {
         MemberPaidSubscriptionEvent,
         labsService
     }) {
+        this._MemberCancelEvent = MemberCancelEvent;
         this._MemberSubscribeEvent = MemberSubscribeEvent;
         this._MemberPaidSubscriptionEvent = MemberPaidSubscriptionEvent;
         this._MemberPaymentEvent = MemberPaymentEvent;
@@ -49,6 +51,35 @@ module.exports = class EventRepository {
         const data = models.map((model) => {
             return {
                 type: 'newsletter_event',
+                data: model.toJSON(options)
+            };
+        });
+
+        return {
+            data,
+            meta
+        };
+    }
+
+    async getCancelEvents(options = {}, filters = {}) {
+        options = {
+            ...options,
+            withRelated: ['member'],
+            filter: []
+        };
+        if (filters['data.created_at']) {
+            options.filter.push(filters['data.created_at'].replace(/data.created_at:/g, 'created_at:'));
+        }
+        if (filters['data.member_id']) {
+            options.filter.push(filters['data.member_id'].replace(/data.member_id:/g, 'member_id:'));
+        }
+        options.filter = options.filter.join('+');
+
+        const {data: models, meta} = await this._MemberCancelEvent.findPage(options);
+
+        const data = models.map((model) => {
+            return {
+                type: 'cancel_event',
                 data: model.toJSON(options)
             };
         });
@@ -355,6 +386,7 @@ module.exports = class EventRepository {
         // Create a list of all events that can be queried
         const pageActions = [
             {type: 'newsletter_event', action: 'getNewsletterSubscriptionEvents'},
+            {type: 'cancel_event', action: 'getCancelEvents'},
             {type: 'subscription_event', action: 'getSubscriptionEvents'},
             {type: 'login_event', action: 'getLoginEvents'},
             {type: 'payment_event', action: 'getPaymentEvents'},
