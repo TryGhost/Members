@@ -225,7 +225,7 @@ module.exports = class MemberBREADService {
                 await this.memberRepository.linkStripeCustomer({
                     customer_id: data.stripe_customer_id,
                     member_id: model.id
-                }, {...options, withRelated: undefined});
+                }, {...options, withRelated: []});
             }
         } catch (error) {
             const isStripeLinkingError = error.message && (error.message.match(/customer|plan|subscription/g));
