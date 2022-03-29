@@ -2,6 +2,7 @@ const should = require('should');
 const EventRepository = require('../../../../lib/repositories/event');
 const sinon = require('sinon');
 const errors = require('@tryghost/errors');
+const moment = require('moment');
 
 describe('EventRepository', function () {
     describe('getNQLSubset', function () {
@@ -10,6 +11,7 @@ describe('EventRepository', function () {
         before(function () {
             eventRepository = new EventRepository({
                 EmailRecipient: null,
+                Member: null,
                 MemberSubscribeEvent: null,
                 MemberPaymentEvent: null,
                 MemberStatusEvent: null,
@@ -88,6 +90,7 @@ describe('EventRepository', function () {
                 MemberSubscribeEvent: {
                     findPage: fake
                 },
+                Member: null,
                 MemberPaymentEvent: null,
                 MemberStatusEvent: null,
                 MemberLoginEvent: null,
@@ -144,6 +147,7 @@ describe('EventRepository', function () {
                 EmailRecipient: {
                     findPage: fake
                 },
+                Member: null,
                 MemberSubscribeEvent: null,
                 MemberPaymentEvent: null,
                 MemberStatusEvent: null,
@@ -196,6 +200,206 @@ describe('EventRepository', function () {
                 filter: 'opened_at:-null+opened_at:123+opened_at:<99999+member_id:-[3,4,5]+member_id:-[1,2,3]',
                 order: 'opened_at desc'
             }).should.be.eql(true);
+        });
+    });
+
+    describe('getStatuses', function () {
+        let eventRepository;
+        let fakeStatuses;
+        let fakeTotal;
+
+        const currentCounts = {paid: 0, free: 0, comped: 0};
+        /**
+         * @type {any[]}
+         */
+        const events = [];
+        const today = '2000-01-10';
+        const tomorrow = '2000-01-11';
+        const yesterday = '2000-01-09';
+
+        before(function () {
+            sinon.stub(moment.fn, 'format').returns(today);
+
+            fakeStatuses = sinon.fake.returns({
+                toJSON: () => {
+                    return events;
+                }
+            });
+
+            fakeTotal = sinon.fake.returns({
+                toJSON: () => {
+                    return [
+                        {
+                            status: 'paid',
+                            count: currentCounts.paid
+                        },
+                        {
+                            status: 'free',
+                            count: currentCounts.free
+                        },
+                        {
+                            status: 'comped',
+                            count: currentCounts.comped
+                        }
+                    ];
+                }
+            });
+
+            eventRepository = new EventRepository({
+                EmailRecipient: null,
+                Member: {
+                    findAll: fakeTotal
+                },
+                MemberSubscribeEvent: null,
+                MemberPaymentEvent: null,
+                MemberStatusEvent: {
+                    findAll: fakeStatuses
+                },
+                MemberLoginEvent: null,
+                MemberPaidSubscriptionEvent: null,
+                labsService: null
+            });
+        });
+
+        afterEach(function () {
+            fakeStatuses.resetHistory();
+            fakeTotal.resetHistory();
+        });
+
+        it('works when there are not status events', async function () {
+            events.splice(0, events.length);
+            currentCounts.paid = 1;
+            currentCounts.free = 2;
+            currentCounts.comped = 3;
+
+            const results = await eventRepository.getStatuses();
+            results.length.should.eql(1);
+            results[0].should.eql({
+                date: today,
+                paid: 1,
+                free: 2,
+                comped: 3,
+                paid_subscribed: 0,
+                paid_canceled: 0
+            });
+
+            fakeStatuses.calledOnce.should.eql(true);
+            fakeTotal.calledOnce.should.eql(true);
+        });
+
+        it('passes paid_subscribers and paid_canceled', async function () {
+            events.splice(0, events.length, {
+                date: today,
+                paid_subscribed: 4,
+                paid_canceled: 3,
+                free_delta: 2,
+                comped_delta: 3
+            });
+            currentCounts.paid = 1;
+            currentCounts.free = 2;
+            currentCounts.comped = 3;
+
+            const results = await eventRepository.getStatuses();
+            results.length.should.eql(1);
+            results[0].should.eql({
+                date: today,
+                paid: 1,
+                free: 2,
+                comped: 3,
+                paid_subscribed: 4,
+                paid_canceled: 3
+            });
+
+            fakeStatuses.calledOnce.should.eql(true);
+            fakeTotal.calledOnce.should.eql(true);
+        });
+
+        it('correctly resolves deltas', async function () {
+            events.splice(0, events.length, {
+                date: yesterday,
+                paid_subscribed: 0,
+                paid_canceled: 0,
+                free_delta: 0,
+                comped_delta: 0
+            }, {
+                date: today,
+                paid_subscribed: 4,
+                paid_canceled: 3,
+                free_delta: 2,
+                comped_delta: 3
+            });
+            currentCounts.paid = 1;
+            currentCounts.free = 2;
+            currentCounts.comped = 3;
+
+            const results = await eventRepository.getStatuses();
+            results.should.eql([
+                {
+                    date: yesterday,
+                    paid: 0,
+                    free: 0,
+                    comped: 0,
+                    paid_subscribed: 0,
+                    paid_canceled: 0
+                },
+                {
+                    date: today,
+                    paid: 1,
+                    free: 2,
+                    comped: 3,
+                    paid_subscribed: 4,
+                    paid_canceled: 3
+                }
+            ]);
+            fakeStatuses.calledOnce.should.eql(true);
+            fakeTotal.calledOnce.should.eql(true);
+        });
+
+        it('ignores events in the future', async function () {
+            events.splice(0, events.length, {
+                date: yesterday,
+                paid_subscribed: 0,
+                paid_canceled: 0,
+                free_delta: 0,
+                comped_delta: 0
+            }, {
+                date: today,
+                paid_subscribed: 4,
+                paid_canceled: 3,
+                free_delta: 2,
+                comped_delta: 3
+            }, {
+                date: tomorrow,
+                paid_subscribed: 10,
+                paid_canceled: 5,
+                free_delta: 8,
+                comped_delta: 9
+            });
+            currentCounts.paid = 1;
+            currentCounts.free = 2;
+            currentCounts.comped = 3;
+
+            const results = await eventRepository.getStatuses();
+            results.should.eql([
+                {
+                    date: yesterday,
+                    paid: 0,
+                    free: 0,
+                    comped: 0,
+                    paid_subscribed: 0,
+                    paid_canceled: 0
+                },
+                {
+                    date: today,
+                    paid: 1,
+                    free: 2,
+                    comped: 3,
+                    paid_subscribed: 4,
+                    paid_canceled: 3
+                }
+            ]);
+            fakeStatuses.calledOnce.should.eql(true);
+            fakeTotal.calledOnce.should.eql(true);
         });
     });
 });

@@ -94,6 +94,7 @@ module.exports = function MembersAPI({
 
     const eventRepository = new EventRepository({
         EmailRecipient,
+        Member,
         MemberSubscribeEvent,
         MemberPaidSubscriptionEvent,
         MemberPaymentEvent,

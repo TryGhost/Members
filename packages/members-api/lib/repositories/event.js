@@ -1,9 +1,11 @@
 const errors = require('@tryghost/errors');
 const nql = require('@nexes/nql');
+const moment = require('moment');
 
 module.exports = class EventRepository {
     constructor({
         EmailRecipient,
+        Member,
         MemberSubscribeEvent,
         MemberPaymentEvent,
         MemberStatusEvent,
@@ -11,6 +13,7 @@ module.exports = class EventRepository {
         MemberPaidSubscriptionEvent,
         labsService
     }) {
+        this._Member = Member;
         this._MemberSubscribeEvent = MemberSubscribeEvent;
         this._MemberPaidSubscriptionEvent = MemberPaidSubscriptionEvent;
         this._MemberPaymentEvent = MemberPaymentEvent;
@@ -501,23 +504,60 @@ module.exports = class EventRepository {
         });
 
         const resultsJSON = results.toJSON();
+        resultsJSON.reverse();
 
-        const cumulativeResults = resultsJSON.reduce((accumulator, result, index) => {
-            if (index === 0) {
-                return [{
-                    date: result.date,
-                    paid: result.paid_delta,
-                    comped: result.comped_delta,
-                    free: result.free_delta
-                }];
+        // Fetch current total amounts and start counting from there
+        const memberCountsResult = await this._Member.findAll({
+            aggregateStatusCounts: true
+        });
+        const memberCounts = memberCountsResult.toJSON();
+
+        const paidEvent = memberCounts.find(c => c.status === 'paid');
+        const freeEvent = memberCounts.find(c => c.status === 'free');
+        const compedEvent = memberCounts.find(c => c.status === 'comped');
+
+        let paid = paidEvent ? paidEvent.count : 0;
+        let free = freeEvent ? freeEvent.count : 0;
+        let comped = compedEvent ? compedEvent.count : 0;
+
+        const today = moment.utc().format('YYYY-MM-DD');
+
+        const cumulativeResults = [];
+        for (const result of resultsJSON) {
+            if (result.date > today) {
+                // Skip results that are in the future (fix for invalid events)
+                continue;
             }
-            return accumulator.concat([{
+            cumulativeResults.unshift({
                 date: result.date,
-                paid: result.paid_delta + accumulator[index - 1].paid,
-                comped: result.comped_delta + accumulator[index - 1].comped,
-                free: result.free_delta + accumulator[index - 1].free
-            }]);
-        }, []);
+                paid,
+                free,
+                comped,
+
+                // Deltas
+                paid_subscribed: result.paid_subscribed,
+                paid_canceled: result.paid_canceled
+            });
+
+            // Update current counts
+            paid = Math.max(0, paid - result.paid_subscribed + result.paid_canceled);
+            free = Math.max(0, free - result.free_delta);
+            comped = Math.max(0, comped - result.comped_delta);
+        }
+
+        // Always make sure we have at least one result
+        if (cumulativeResults.length === 0) {
+            cumulativeResults.push({
+                date: today,
+                paid,
+                free,
+                comped,
+
+                // Deltas
+                paid_subscribed: 0,
+                paid_canceled: 0
+            });
+        }
 
         return cumulativeResults;
     }
