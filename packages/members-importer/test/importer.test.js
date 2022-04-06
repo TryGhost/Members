@@ -69,7 +69,8 @@ describe('Importer', function () {
                 isSet: sinon.stub(),
                 addJob: sinon.stub(),
                 knex: knexStub,
-                urlFor: sinon.stub()
+                urlFor: sinon.stub(),
+                context: {importer: true}
             });
 
             const result = await importer.process({
@@ -109,7 +110,8 @@ describe('Importer', function () {
                 isSet: sinon.stub(),
                 addJob: sinon.stub(),
                 knex: sinon.stub(),
-                urlFor: sinon.stub()
+                urlFor: sinon.stub(),
+                context: {importer: true}
             });
 
             const result = await membersImporter.prepare(`${csvPath}/single-column-with-header.csv`);
@@ -132,7 +134,8 @@ describe('Importer', function () {
                 isSet: sinon.stub(),
                 addJob: sinon.stub(),
                 knex: sinon.stub(),
-                urlFor: sinon.stub()
+                urlFor: sinon.stub(),
+                context: {importer: true}
             });
 
             await membersImporter.prepare(`${csvPath}/single-column-with-header.csv`);
