@@ -174,8 +174,10 @@ module.exports = class MemberRepository {
 
         if (context.internal) {
             source = 'system';
-        } else if (context.user || context.importer) {
+        } else if (context.user) {
             source = 'admin';
+        } else if (context.importer) {
+            source = 'importer';
         } else if (context.api_key) {
             source = 'api';
         } else {
