@@ -670,15 +670,51 @@ module.exports = class MemberRepository {
                 id: model.id
             });
 
-            if (model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status')) {
-                const originalMrrDelta = getMRRDelta({interval: model.get('plan_interval'), amount: model.get('plan_amount'), status: model.get('status')});
-                const updatedMrrDelta = getMRRDelta({interval: updated.get('plan_interval'), amount: updated.get('plan_amount'), status: updated.get('status')});
+            if (model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status') || model.get('cancel_at_period_end') !== updated.get('cancel_at_period_end')) {
+                const originalMrrDelta = getMRR({interval: model.get('plan_interval'), amount: model.get('plan_amount'), status: model.get('status'), cancelled: model.get('cancel_at_period_end')});
+                const updatedMrrDelta = getMRR({interval: updated.get('plan_interval'), amount: updated.get('plan_amount'), status: updated.get('status'), cancelled: updated.get('cancel_at_period_end')});
+
+                const getStatus = (model) => {
+                    const status = model.get('status');
+                    const cancelled = model.get('cancel_at_period_end');
+
+                    if (status === 'canceled') {
+                        return 'expired';
+                    }
+
+                    if (cancelled) {
+                        return 'cancelled';
+                    }
+
+                    if (this.isActiveSubscriptionStatus(status)) {
+                        return 'active';
+                    }
+
+                    return 'inactive';
+                };
+
+                function getEventName(originalStatus, updatedStatus) {
+                    if (originalStatus === updatedStatus) {
+                        return 'updated';
+                    }
+
+                    if (originalStatus === 'cancelled' && updatedStatus === 'active') {
+                        return 'reactivated';
+                    }
+
+                    return updatedStatus;
+                }
+
+                const originalStatus = getStatus(model);
+                const updatedStatus = getStatus(updated);
+
                 const mrrDelta = updatedMrrDelta - originalMrrDelta;
                 await this._MemberPaidSubscriptionEvent.add({
                     member_id: member.id,
                     source: 'stripe',
+                    name: getEventName(originalStatus, updatedStatus),
                     from_plan: model.get('plan_id'),
-                    to_plan: updated.get('plan_id'),
+                    to_plan: updated.get('status') === 'canceled' ? null : updated.get('plan_id'),
                     currency: subscriptionPriceData.currency,
                     mrr_delta: mrrDelta
                 }, options);
@@ -688,11 +724,12 @@ module.exports = class MemberRepository {
             await this._StripeCustomerSubscription.add(subscriptionData, options);
             await this._MemberPaidSubscriptionEvent.add({
                 member_id: member.id,
+                name: 'created',
                 source: 'stripe',
                 from_plan: null,
                 to_plan: subscriptionPriceData.id,
                 currency: subscriptionPriceData.currency,
-                mrr_delta: getMRRDelta({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status}),
+                mrr_delta: getMRR({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status, cancelled: subscription.cancel_at_period_end}),
                 ...eventData
             }, options);
         }
