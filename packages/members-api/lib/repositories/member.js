@@ -729,7 +729,7 @@ module.exports = class MemberRepository {
                     return 'inactive';
                 };
 
-                function getEventName(originalStatus, updatedStatus) {
+                const getEventName = (originalStatus, updatedStatus) => {
                     if (originalStatus === updatedStatus) {
                         return 'updated';
                     }
@@ -739,7 +739,7 @@ module.exports = class MemberRepository {
                     }
 
                     return updatedStatus;
-                }
+                };
 
                 const originalStatus = getStatus(model);
                 const updatedStatus = getStatus(updated);
