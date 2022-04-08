@@ -421,7 +421,7 @@ module.exports = class MemberRepository {
                         from_plan: subscription.get('plan_id'),
                         to_plan: null,
                         currency: subscription.get('plan_currency'),
-                        mrr_delta: -1 * getMRRDelta({
+                        mrr_delta: -1 * this.getMRR({
                             interval: subscription.get('plan_interval'),
                             amount: subscription.get('plan_amount')
                         })
