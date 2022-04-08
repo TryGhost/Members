@@ -418,6 +418,7 @@ module.exports = class MemberRepository {
                     await this._MemberPaidSubscriptionEvent.add({
                         member_id: member.id,
                         source: 'stripe',
+                        subscription_id: subscription.id,
                         from_plan: subscription.get('plan_id'),
                         to_plan: null,
                         currency: subscription.get('plan_currency'),
@@ -748,6 +749,7 @@ module.exports = class MemberRepository {
                     member_id: member.id,
                     source: 'stripe',
                     name: getEventName(originalStatus, updatedStatus),
+                    subscription_id: updated.id,
                     from_plan: model.get('plan_id'),
                     to_plan: updated.get('status') === 'canceled' ? null : updated.get('plan_id'),
                     currency: subscriptionPriceData.currency,
@@ -756,9 +758,10 @@ module.exports = class MemberRepository {
             }
         } else {
             eventData.created_at = new Date(subscription.start_date * 1000);
-            await this._StripeCustomerSubscription.add(subscriptionData, options);
+            const model = await this._StripeCustomerSubscription.add(subscriptionData, options);
             await this._MemberPaidSubscriptionEvent.add({
                 member_id: member.id,
+                subscription_id: model.id,
                 name: 'created',
                 source: 'stripe',
                 from_plan: null,
