@@ -719,7 +719,7 @@ module.exports = class MemberRepository {
                     }
 
                     if (cancelled) {
-                        return 'cancelled';
+                        return 'canceled';
                     }
 
                     if (this.isActiveSubscriptionStatus(status)) {
