@@ -410,7 +410,8 @@ module.exports = class MemberRepository {
                     );
 
                     await this._StripeCustomerSubscription.upsert({
-                        status: updatedSubscription.status
+                        status: updatedSubscription.status,
+                        mrr: 0
                     }, {
                         subscription_id: updatedSubscription.id
                     });
@@ -422,10 +423,7 @@ module.exports = class MemberRepository {
                         from_plan: subscription.get('plan_id'),
                         to_plan: null,
                         currency: subscription.get('plan_currency'),
-                        mrr_delta: -1 * this.getMRR({
-                            interval: subscription.get('plan_interval'),
-                            amount: subscription.get('plan_amount')
-                        })
+                        mrr_delta: -1 * subscription.get('mrr')
                     }, options);
                 }
             }
@@ -712,10 +710,9 @@ module.exports = class MemberRepository {
                 id: model.id
             });
 
-            if (model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status') || model.get('cancel_at_period_end') !== updated.get('cancel_at_period_end')) {
-                // TODO: we should use the previously saved MRR in the future as soon as the MRR column is 'stable' and migrated correctly
-                const originalMrrDelta = this.getMRR({interval: model.get('plan_interval'), amount: model.get('plan_amount'), status: model.get('status'), canceled: model.get('cancel_at_period_end')});
-                const updatedMrrDelta = this.getMRR({interval: updated.get('plan_interval'), amount: updated.get('plan_amount'), status: updated.get('status'), canceled: updated.get('cancel_at_period_end')});
+            if (model.get('mrr') !== updated.get('mrr') || model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status') || model.get('cancel_at_period_end') !== updated.get('cancel_at_period_end')) {
+                const originalMrrDelta = model.get('mrr');
+                const updatedMrrDelta = updated.get('mrr');
 
                 const getStatus = (model) => {
                     const status = model.get('status');
@@ -774,7 +771,7 @@ module.exports = class MemberRepository {
                 from_plan: null,
                 to_plan: subscriptionPriceData.id,
                 currency: subscriptionPriceData.currency,
-                mrr_delta: this.getMRR({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status, canceled: subscription.cancel_at_period_end}),
+                mrr_delta: model.get('mrr'),
                 ...eventData
             }, options);
         }
