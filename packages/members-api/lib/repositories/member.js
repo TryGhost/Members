@@ -92,7 +92,7 @@ module.exports = class MemberRepository {
         return subscription.plan && subscription.plan.nickname && subscription.plan.nickname.toLowerCase() === 'complimentary';
     }
 
-    getMRR({interval, amount, status = null, canceled = false}) {
+    getMRR({interval, amount, status = null, canceled = false, discount = null}) {
         if (status === 'trialing') {
             return 0;
         }
@@ -106,24 +106,37 @@ module.exports = class MemberRepository {
             return 0;
         }
 
-        if (this._labsService.isSet('dashboardV5') && canceled) {
+        const matchStripeBehaviour = this._labsService.isSet('dashboardV5');
+
+        if (matchStripeBehaviour && canceled) {
             return 0;
         }
 
+        let amountWithDiscount = amount;
+
+        if (matchStripeBehaviour && discount && discount.end === null && discount.coupon && discount.coupon.duration === 'forever') {
+            // Discounts should only get applied when they are 'forever' discounts / they don't have an end date
+            if (discount.coupon.amount_off !== null) {
+                amountWithDiscount = Math.max(0, amountWithDiscount - discount.coupon.amount_off);
+            } else {
+                amountWithDiscount = Math.round((amountWithDiscount * (100 - discount.coupon.percent_off)) / 100);
+            }
+        }
+
         if (interval === 'year') {
-            return Math.floor(amount / 12);
+            return Math.floor(amountWithDiscount / 12);
         }
 
         if (interval === 'month') {
-            return amount;
+            return Math.round(amountWithDiscount);
         }
 
         if (interval === 'week') {
-            return amount * 4;
+            return Math.round(amountWithDiscount * 4);
         }
 
         if (interval === 'day') {
-            return amount * 30;
+            return Math.round(amountWithDiscount * 30);
         }
     }
 
@@ -700,7 +713,8 @@ module.exports = class MemberRepository {
                 interval: _.get(subscriptionPriceData, 'recurring.interval', ''), 
                 amount: subscriptionPriceData.unit_amount, 
                 status: subscription.status, 
-                canceled: subscription.cancel_at_period_end
+                canceled: subscription.cancel_at_period_end,
+                discount: subscription.discount
             })
         };
         let eventData = {};
