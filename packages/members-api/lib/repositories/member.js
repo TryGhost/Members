@@ -92,7 +92,7 @@ module.exports = class MemberRepository {
         return subscription.plan && subscription.plan.nickname && subscription.plan.nickname.toLowerCase() === 'complimentary';
     }
 
-    getMRR({interval, amount, status = null, cancelled = false}) {
+    getMRR({interval, amount, status = null, canceled = false}) {
         if (status === 'trialing') {
             return 0;
         }
@@ -106,7 +106,7 @@ module.exports = class MemberRepository {
             return 0;
         }
 
-        if (this._labsService.isSet('dashboardV5') && cancelled) {
+        if (this._labsService.isSet('dashboardV5') && canceled) {
             return 0;
         }
 
@@ -712,13 +712,13 @@ module.exports = class MemberRepository {
 
                 const getStatus = (model) => {
                     const status = model.get('status');
-                    const cancelled = model.get('cancel_at_period_end');
+                    const canceled = model.get('cancel_at_period_end');
 
                     if (status === 'canceled') {
                         return 'expired';
                     }
 
-                    if (cancelled) {
+                    if (canceled) {
                         return 'canceled';
                     }
 
@@ -734,7 +734,7 @@ module.exports = class MemberRepository {
                         return 'updated';
                     }
 
-                    if (originalStatus === 'cancelled' && updatedStatus === 'active') {
+                    if (originalStatus === 'canceled' && updatedStatus === 'active') {
                         return 'reactivated';
                     }
 
@@ -767,7 +767,7 @@ module.exports = class MemberRepository {
                 from_plan: null,
                 to_plan: subscriptionPriceData.id,
                 currency: subscriptionPriceData.currency,
-                mrr_delta: this.getMRR({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status, cancelled: subscription.cancel_at_period_end}),
+                mrr_delta: this.getMRR({interval: _.get(subscriptionPriceData, 'recurring.interval'), amount: subscriptionPriceData.unit_amount, status: subscriptionPriceData.status, canceled: subscription.cancel_at_period_end}),
                 ...eventData
             }, options);
         }
