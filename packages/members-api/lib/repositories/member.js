@@ -128,15 +128,15 @@ module.exports = class MemberRepository {
         }
 
         if (interval === 'month') {
-            return Math.round(amountWithDiscount);
+            return amountWithDiscount;
         }
 
         if (interval === 'week') {
-            return Math.round(amountWithDiscount * 4);
+            return amountWithDiscount * 4;
         }
 
         if (interval === 'day') {
-            return Math.round(amountWithDiscount * 30);
+            return amountWithDiscount * 30;
         }
     }
 
