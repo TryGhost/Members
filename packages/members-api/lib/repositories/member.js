@@ -724,7 +724,7 @@ module.exports = class MemberRepository {
                 id: model.id
             });
 
-            if (model.get('mrr') !== updated.get('mrr') || model.get('status') !== updated.get('status') || model.get('cancel_at_period_end') !== updated.get('cancel_at_period_end')) {
+            if (model.get('mrr') !== updated.get('mrr') || model.get('plan_id') !== updated.get('plan_id') || model.get('status') !== updated.get('status') || model.get('cancel_at_period_end') !== updated.get('cancel_at_period_end')) {
                 const originalMrrDelta = model.get('mrr');
                 const updatedMrrDelta = updated.get('mrr');
 
