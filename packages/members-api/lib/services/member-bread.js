@@ -1,4 +1,5 @@
 const errors = require('@tryghost/errors');
+const logging = require('@tryghost/logging');
 const tpl = require('@tryghost/tpl');
 const moment = require('moment');
 
@@ -139,7 +140,8 @@ module.exports = class MemberBREADService {
                 subscriptionOffers.set(subscriptionModel.get('subscription_id'), offer);
             }
         } catch (e) {
-            console.error(e);
+            logging.error(`Failed to load offers for subscriptions - ${subscriptions.map(s => s.id).join(', ')}.`);
+            logging.error(e);
         }
         
         return subscriptionOffers;
