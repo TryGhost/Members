@@ -49,6 +49,7 @@ module.exports = class MemberBREADService {
 
     /**
      * @private
+     * Adds missing complimentary subscriptions to a member and makes sure the tier of all subscriptions is set correctly.
      */
     attachSubscriptionsToMember(member) {
         if (!member.products || !Array.isArray(member.products)) {
@@ -324,6 +325,7 @@ module.exports = class MemberBREADService {
             'stripeSubscriptions.customer',
             'stripeSubscriptions.stripePrice',
             'stripeSubscriptions.stripePrice.stripeProduct',
+            'stripeSubscriptions.stripePrice.stripeProduct.product',
             'products',
             'newsletters'
         ];
