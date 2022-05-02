@@ -55,7 +55,7 @@ describe('LastSeenAtUpdater', function () {
         assert(stub.notCalled, 'The LastSeenAtUpdater should attempt a member update when the new timestamp is within the same day in the publication timezone.');
     });
 
-    it.only('works correctly on another timezone (updating last_seen_at)', async function () {
+    it('works correctly on another timezone (updating last_seen_at)', async function () {
         const now = moment('2022-02-28T04:00:00Z').utc();
         const previousLastSeen = moment('2022-02-27T20:00:00Z').toISOString();
         const stub = sinon.stub().resolves();
