@@ -1,5 +1,6 @@
 const {MemberPageViewEvent} = require('@tryghost/member-events');
 const moment = require('moment-timezone');
+const {IncorrectUsageError} = require('@tryghost/errors');
 
 /**
  * Listen for `MemberViewEvent` to update the `member.last_seen_at` timestamp
@@ -13,6 +14,7 @@ class LastSeenAtUpdater {
      * @param {Object} deps.services The list of service dependencies
      * @param {any} deps.services.domainEvents The DomainEvents service
      * @param {any} deps.services.settingsCache The settings service
+     * @param {() => object} deps.getMembersApi - A function which returns an instance of members-api
      */
     constructor({
         models: {
@@ -21,8 +23,14 @@ class LastSeenAtUpdater {
         services: {
             domainEvents,
             settingsCache
-        }
+        },
+        getMembersApi
     }) {
+        if (!getMembersApi) {
+            throw new IncorrectUsageError({message: 'Missing option getMembersApi'});
+        }
+
+        this._getMembersApi = getMembersApi;
         this._memberModel = Member;
         this._domainEventsService = domainEvents;
         this._settingsCacheService = settingsCache;
@@ -44,7 +52,8 @@ class LastSeenAtUpdater {
     async updateLastSeenAt(memberId, memberLastSeenAt, timestamp) {
         const timezone = this._settingsCacheService.get('timezone');
         if (memberLastSeenAt === null || moment(moment.utc(timestamp).tz(timezone).startOf('day')).isAfter(memberLastSeenAt)) {
-            await this._memberModel.edit({
+            const membersApi = await this._getMembersApi();
+            await membersApi.members.update({
                 last_seen_at: moment.utc(timestamp).format('YYYY-MM-DD HH:mm:ss')
             }, {
                 id: memberId
