@@ -6,7 +6,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 const {LastSeenAtUpdater} = require('../');
 const DomainEvents = require('@tryghost/domain-events');
-const {MemberPageViewEvent, MemberSubscribeEvent} = require('@tryghost/member-events');
+const {MemberPageViewEvent} = require('@tryghost/member-events');
 const moment = require('moment');
 
 describe('LastSeenAtUpdater', function () {
