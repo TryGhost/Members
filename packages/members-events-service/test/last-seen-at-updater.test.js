@@ -24,7 +24,9 @@ describe('LastSeenAtUpdater', function () {
             },
             async getMembersApi() {
                 return {
-                    update: stub
+                    members: {
+                        update: stub
+                    }
                 };
             }
         });
@@ -47,7 +49,9 @@ describe('LastSeenAtUpdater', function () {
             },
             async getMembersApi() {
                 return {
-                    update: stub
+                    members: {
+                        update: stub
+                    }
                 };
             }
         });
@@ -69,7 +73,9 @@ describe('LastSeenAtUpdater', function () {
             },
             async getMembersApi() {
                 return {
-                    update: stub
+                    members: {
+                        update: stub
+                    }
                 };
             }
         });
@@ -95,7 +101,9 @@ describe('LastSeenAtUpdater', function () {
             },
             async getMembersApi() {
                 return {
-                    update: stub
+                    members: {
+                        update: stub
+                    }
                 };
             }
         });
@@ -116,7 +124,9 @@ describe('LastSeenAtUpdater', function () {
             },
             async getMembersApi() {
                 return {
-                    update: stub
+                    members: {
+                        update: stub
+                    }
                 };
             }
         });
