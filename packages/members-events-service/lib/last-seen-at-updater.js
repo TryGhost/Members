@@ -9,17 +9,12 @@ class LastSeenAtUpdater {
     /**
      * Initializes the event subscriber
      * @param {Object} deps dependencies
-     * @param {Object} deps.models The list of model dependencies
-     * @param {any} deps.models.Member The Member model
      * @param {Object} deps.services The list of service dependencies
      * @param {any} deps.services.domainEvents The DomainEvents service
      * @param {any} deps.services.settingsCache The settings service
      * @param {() => object} deps.getMembersApi - A function which returns an instance of members-api
      */
     constructor({
-        models: {
-            Member
-        },
         services: {
             domainEvents,
             settingsCache
@@ -31,7 +26,6 @@ class LastSeenAtUpdater {
         }
 
         this._getMembersApi = getMembersApi;
-        this._memberModel = Member;
         this._domainEventsService = domainEvents;
         this._settingsCacheService = settingsCache;
 
