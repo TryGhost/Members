@@ -11,6 +11,7 @@ const messages = {
     noStripeConnection: 'Cannot {action} without a Stripe Connection',
     moreThanOneProduct: 'A member cannot have more than one Product',
     existingSubscriptions: 'Cannot modify Products for a Member with active Subscriptions',
+    memberNotFound: 'Could not find Member {id}',
     subscriptionNotFound: 'Could not find Subscription {id}',
     productNotFound: 'Could not find Product {id}',
     bulkActionRequiresFilter: 'Cannot perform {action} without a filter or all=true',
@@ -345,7 +346,7 @@ module.exports = class MemberRepository {
 
             // Make sure we throw the right error if it doesn't exist
             if (!initialMember) {
-                throw new NotFoundError();
+                throw new NotFoundError({message: tpl(messages.memberNotFound, {id: options.id})});
             }
         }
 
