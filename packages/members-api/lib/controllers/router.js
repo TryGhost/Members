@@ -57,6 +57,14 @@ module.exports = class RouterController {
         }
     }
 
+    isComplimentarySubscription(sub) {
+        return sub.get('plan_nickname') === 'Complimentary';
+    }
+
+    isActiveSubscription(sub) {
+        return ['active', 'trialing', 'unpaid', 'past_due'].includes(sub.get('status'));
+    }
+
     async createCheckoutSetupSession(req, res) {
         const identity = req.body.identity;
 
@@ -260,7 +268,8 @@ module.exports = class RouterController {
             return res.end(JSON.stringify(sessionInfo));
         }
 
-        if (member.related('products').length !== 0) {
+        // Paid members are not allowed to create checkout session
+        if (member.get('status') === 'paid') {
             res.writeHead(403);
             return res.end('No permission');
         }
