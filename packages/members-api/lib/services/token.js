@@ -18,8 +18,8 @@ module.exports = class TokenService {
         const jwk = await this._keyStoreReady;
         return jwt.sign({
             sub,
-            kid: jwk.kid
         }, this._privateKey, {
+            keyid: jwk.kid,
             algorithm: 'RS512',
             audience: this._issuer,
             expiresIn: '10m',
