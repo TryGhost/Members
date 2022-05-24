@@ -13,6 +13,7 @@ or
 
 ```js
 const DomainEvents = require('@tryghost/domain-events');
+const events = new DomainEvents();
 
 class MyEvent {
     constructor(message) {
@@ -23,13 +24,13 @@ class MyEvent {
     }
 }
 
-DomainEvents.subscribe(MyEvent, function handler(event) {
+events.subscribe(MyEvent, function handler(event) {
     console.log(event.data.message);
 });
 
 const event = new MyEvent('hello world');
 
-DomainEvents.dispatch(event);
+events.dispatch(event);
 ```
 
 
