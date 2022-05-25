@@ -1,20 +1,21 @@
 const _ = require('lodash');
 const logging = require('@tryghost/logging');
 const errors = require('@tryghost/errors');
-const DomainEvents = require('@tryghost/domain-events');
 const {SubscriptionCreatedEvent} = require('@tryghost/member-events');
 
 module.exports = class WebhookController {
     /**
      * @param {object} deps
      * @param {import('./WebhookManager')} deps.webhookManager
-     * @param {any} deps.deps.memberRepository
+     * @param {any} deps.memberRepository
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
      */
     constructor(deps) {
         this.deps = deps;
         this.webhookManager = deps.webhookManager;
         this.api = deps.api;
         this.sendSignupEmail = deps.sendSignupEmail;
+        this.domainEvents = deps.domainEvents;
         this.handlers = {
             'customer.subscription.deleted': this.subscriptionEvent,
             'customer.subscription.updated': this.subscriptionEvent,
@@ -275,7 +276,7 @@ module.exports = class WebhookController {
                 offerId: session.metadata.offer || null
             });
 
-            DomainEvents.dispatch(event);
+            this.domainEvents.dispatch(event);
 
             if (checkoutType !== 'upgrade') {
                 this.sendSignupEmail(customer.email);
