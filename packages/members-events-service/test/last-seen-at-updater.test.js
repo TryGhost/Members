@@ -101,7 +101,7 @@ describe('LastSeenAtUpdater', function () {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {
