@@ -1,5 +1,4 @@
 const errors = require('@tryghost/errors');
-const DomainEvents = require('@tryghost/domain-events');
 const {MemberSubscribeEvent} = require('@tryghost/member-events');
 
 const messages = {
@@ -20,6 +19,7 @@ class VerificationTrigger {
      * @param {any} deps.membersStats MemberStats service
      * @param {any} deps.Settings Ghost Settings model
      * @param {any} deps.eventRepository For querying events
+     * @param {import('@tryghost/domain-events')} domainEvents
      */
     constructor({
         configThreshold,
@@ -28,7 +28,8 @@ class VerificationTrigger {
         sendVerificationEmail,
         membersStats,
         Settings,
-        eventRepository
+        eventRepository,
+        domainEvents
     }) {
         this._configThreshold = configThreshold;
         this._isVerified = isVerified;
@@ -38,7 +39,7 @@ class VerificationTrigger {
         this._Settings = Settings;
         this._eventRepository = eventRepository;
 
-        DomainEvents.subscribe(MemberSubscribeEvent, async (event) => {
+        domainEvents.subscribe(MemberSubscribeEvent, async (event) => {
             if (event.data.source === 'api' && isFinite(this._configThreshold)) {
                 const createdAt = new Date();
                 createdAt.setDate(createdAt.getDate() - 30);
