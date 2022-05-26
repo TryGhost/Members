@@ -16,6 +16,7 @@ class EventsController {
         /** @private */
         this.domainEvents = deps.domainEvents;
     }
+
     createEvents(req, res) {
         try {
             const {events} = req.body;
@@ -27,7 +28,7 @@ class EventsController {
                         memberId: req.member ? req.member.id : null,
                         memberStatus: req.member ? req.member.status : null
                     }, event.created_at);
-                    DomainEvents.dispatch(entryEvent);
+                    this.domainEvents.dispatch(entryEvent);
                 }
             }
             res.writeHead(201);
