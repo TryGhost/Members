@@ -4,9 +4,10 @@ const EventHandler = require('./lib/EventHandler');
 class MemberAnalyticsService {
     /**
      * @param {AnalyticEventRepository} analyticEventRepository
+     * @param {import('@tryghost/domain-events')} domainEvents
      */
     constructor(analyticEventRepository) {
-        this.eventHandler = new EventHandler(analyticEventRepository);
+        this.eventHandler = new EventHandler(analyticEventRepository, domainEvents);
     }
 
     static create(AnalyticEventModel) {

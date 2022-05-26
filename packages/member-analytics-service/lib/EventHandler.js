@@ -1,4 +1,3 @@
-const DomainEvents = require('@tryghost/domain-events');
 const {
     MemberEntryViewEvent,
     MemberUnsubscribeEvent,
@@ -12,17 +11,20 @@ const AnalyticEvent = require('./AnalyticEvent');
 class EventHandler {
     /**
      * @param {import('./AnalyticEventRepository')} repository
+     * @param {import('@tryghost/domain-events')} domainEvents
      */
-    constructor(repository) {
+    constructor(repository, domainEvents) {
         /** @private */
         this.repository = repository;
+        /** @private */
+        this.domainEvents = domainEvents;
     }
 
     /**
      * Listens for member events and handles creating analytic events and storing them.
      */
     setupSubscribers() {
-        DomainEvents.subscribe(MemberEntryViewEvent, async (ev) => {
+        this.domainEvents.subscribe(MemberEntryViewEvent, async (ev) => {
             const event = AnalyticEvent.create({
                 name: 'entry_view',
                 memberId: ev.data.memberId,
@@ -35,7 +37,7 @@ class EventHandler {
             await this.repository.save(event);
         });
 
-        DomainEvents.subscribe(MemberUnsubscribeEvent, async (ev) => {
+        this.domainEvents.subscribe(MemberUnsubscribeEvent, async (ev) => {
             const event = AnalyticEvent.create({
                 name: 'unsubscribe',
                 memberId: ev.data.memberId,
@@ -48,7 +50,7 @@ class EventHandler {
             await this.repository.save(event);
         });
 
-        DomainEvents.subscribe(MemberSignupEvent, async (ev) => {
+        this.domainEvents.subscribe(MemberSignupEvent, async (ev) => {
             const event = AnalyticEvent.create({
                 name: 'signup',
                 memberId: ev.data.memberId,
@@ -61,7 +63,7 @@ class EventHandler {
             await this.repository.save(event);
         });
 
-        DomainEvents.subscribe(MemberPaidCancellationEvent, async (ev) => {
+        this.domainEvents.subscribe(MemberPaidCancellationEvent, async (ev) => {
             const event = AnalyticEvent.create({
                 name: 'paid_cancellation',
                 memberId: ev.data.memberId,
@@ -75,7 +77,7 @@ class EventHandler {
             await this.repository.save(event);
         });
 
-        DomainEvents.subscribe(MemberPaidConverstionEvent, async (ev) => {
+        this.domainEvents.subscribe(MemberPaidConverstionEvent, async (ev) => {
             const event = AnalyticEvent.create({
                 name: 'paid_conversion',
                 memberId: ev.data.memberId,
