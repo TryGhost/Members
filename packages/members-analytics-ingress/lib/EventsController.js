@@ -9,7 +9,15 @@ const {MemberEntryViewEvent} = require('@tryghost/member-events');
  */
 
 class EventsController {
-    static createEvents(req, res) {
+    /**
+     * @param {object} deps
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
+     */
+    constructor(deps) {
+        /** @private */
+        this.domainEvents = deps.domainEvents;
+    }
+    createEvents(req, res) {
         try {
             const {events} = req.body;
             for (const event of events) {
