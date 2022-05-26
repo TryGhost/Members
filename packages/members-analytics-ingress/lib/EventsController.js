@@ -1,4 +1,3 @@
-const DomainEvents = require('@tryghost/domain-events');
 const {MemberEntryViewEvent} = require('@tryghost/member-events');
 
 /**
@@ -9,7 +8,16 @@ const {MemberEntryViewEvent} = require('@tryghost/member-events');
  */
 
 class EventsController {
-    static createEvents(req, res) {
+    /**
+     * @param {object} deps
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
+     */
+    constructor(deps) {
+        /** @private */
+        this.domainEvents = deps.domainEvents;
+    }
+
+    createEvents(req, res) {
         try {
             const {events} = req.body;
             for (const event of events) {
@@ -20,7 +28,7 @@ class EventsController {
                         memberId: req.member ? req.member.id : null,
                         memberStatus: req.member ? req.member.status : null
                     }, event.created_at);
-                    DomainEvents.dispatch(entryEvent);
+                    this.domainEvents.dispatch(entryEvent);
                 }
             }
             res.writeHead(201);

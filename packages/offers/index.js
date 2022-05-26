@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 // @TODO: Reduce file length and remove the line above
 
-const DomainEvents = require('@tryghost/domain-events');
 const OfferCodeChangeEvent = require('./lib/domain/events/OfferCodeChange');
 const OfferCreatedEvent = require('./lib/domain/events/OfferCreated');
 const OfferRepository = require('./lib/application/OfferRepository');
@@ -12,18 +11,20 @@ class OffersModule {
      * @param {OffersAPI} offersAPI
      * @param {import('@tryghost/express-dynamic-redirects')} redirectManager
      * @param {OfferRepository} repository
+     * @param {import('@tryghost/domain-events')} domainEvents
      */
-    constructor(offersAPI, redirectManager, repository) {
+    constructor(offersAPI, redirectManager, repository, domainEvents) {
         this.api = offersAPI;
         this.repository = repository;
         this.redirectManager = redirectManager;
+        this.domainEvents = domainEvents;
     }
 
     /**
      * @returns {Promise<void>}
      */
     async init() {
-        DomainEvents.subscribe(OfferCodeChangeEvent, (event) => {
+        this.domainEvents.subscribe(OfferCodeChangeEvent, (event) => {
             if (event.data.previousCode) {
                 this.redirectManager.removeRedirect(`/${event.data.previousCode.value}`);
             }
@@ -34,7 +35,7 @@ class OffersModule {
             );
         });
 
-        DomainEvents.subscribe(OfferCreatedEvent, (event) => {
+        this.domainEvents.subscribe(OfferCreatedEvent, (event) => {
             this.redirectManager.addRedirect(
                 `/${event.data.offer.code.value}`,
                 `/#/portal/offers/${event.data.offer.id}`,
@@ -58,13 +59,14 @@ class OffersModule {
      * @param {import('@tryghost/express-dynamic-redirects')} deps.redirectManager
      * @param {any} deps.OfferModel
      * @param {any} deps.OfferRedemptionModel
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
      *
      * @returns {OffersModule}
      */
     static create(deps) {
-        const repository = new OfferRepository(deps.OfferModel, deps.OfferRedemptionModel);
+        const repository = new OfferRepository(deps.OfferModel, deps.OfferRedemptionModel, deps.domainEvents);
         const offersAPI = new OffersAPI(repository);
-        return new OffersModule(offersAPI, deps.redirectManager, repository);
+        return new OffersModule(offersAPI, deps.redirectManager, repository, deps.domainEvents);
     }
 
     static events = {

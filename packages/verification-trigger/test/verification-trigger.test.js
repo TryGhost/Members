@@ -12,7 +12,8 @@ describe('Import threshold', function () {
             configThreshold: 2,
             membersStats: {
                 getTotalMembers: async () => 1
-            }
+            },
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.getImportThreshold();
@@ -24,7 +25,8 @@ describe('Import threshold', function () {
             configThreshold: 2,
             membersStats: {
                 getTotalMembers: async () => 3
-            }
+            },
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.getImportThreshold();
@@ -37,7 +39,8 @@ describe('Import threshold', function () {
             configThreshold: Infinity,
             memberStats: {
                 getTotalMembers: membersStub
-            }
+            },
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.getImportThreshold();
@@ -56,7 +59,8 @@ describe('Email verification flow', function () {
             },
             isVerified: () => false,
             isVerificationRequired: () => false,
-            sendVerificationEmail: emailStub
+            sendVerificationEmail: emailStub,
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.startVerificationProcess({
@@ -78,7 +82,8 @@ describe('Email verification flow', function () {
             },
             isVerified: () => true,
             isVerificationRequired: () => false,
-            sendVerificationEmail: emailStub
+            sendVerificationEmail: emailStub,
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.startVerificationProcess({
@@ -100,7 +105,8 @@ describe('Email verification flow', function () {
             },
             isVerified: () => false,
             isVerificationRequired: () => true,
-            sendVerificationEmail: emailStub
+            sendVerificationEmail: emailStub,
+            domainEvents: new DomainEvents()
         });
 
         const result = await trigger.startVerificationProcess({
@@ -122,7 +128,8 @@ describe('Email verification flow', function () {
             },
             isVerified: () => false,
             isVerificationRequired: () => false,
-            sendVerificationEmail: emailStub
+            sendVerificationEmail: emailStub,
+            domainEvents: new DomainEvents()
         });
 
         await trigger.startVerificationProcess({
@@ -140,7 +147,8 @@ describe('Email verification flow', function () {
             },
             isVerified: () => false,
             isVerificationRequired: () => false,
-            sendVerificationEmail: emailStub
+            sendVerificationEmail: emailStub,
+            domainEvents: new DomainEvents()
         });
 
         await trigger.startVerificationProcess({
@@ -166,6 +174,8 @@ describe('Email verification flow', function () {
             }
         });
 
+        const domainEvents = new DomainEvents();
+
         new VerificationTrigger({
             configThreshold: 2,
             Settings: {
@@ -176,10 +186,11 @@ describe('Email verification flow', function () {
             sendVerificationEmail: emailStub,
             eventRepository: {
                 getNewsletterSubscriptionEvents: eventStub
-            }
+            },
+            domainEvents
         });
 
-        DomainEvents.dispatch(MemberSubscribeEvent.create({
+        domainEvents.dispatch(MemberSubscribeEvent.create({
             memberId: 'hello!',
             source: 'api'
         }, new Date()));
@@ -215,7 +226,8 @@ describe('Email verification flow', function () {
             sendVerificationEmail: emailStub,
             eventRepository: {
                 getNewsletterSubscriptionEvents: eventStub
-            }
+            },
+            domainEvents: new DomainEvents()
         });
 
         await trigger.testImportThreshold();

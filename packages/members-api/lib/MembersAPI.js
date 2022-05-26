@@ -58,7 +58,8 @@ module.exports = function MembersAPI({
     stripeAPIService,
     offersAPI,
     labsService,
-    newslettersService
+    newslettersService,
+    domainEvents
 }) {
     const tokenService = new TokenService({
         privateKey,
@@ -66,8 +67,10 @@ module.exports = function MembersAPI({
         issuer
     });
 
-    const memberAnalyticsService = MemberAnalyticsService.create(MemberAnalyticEvent);
+    const memberAnalyticsService = MemberAnalyticsService.create(MemberAnalyticEvent, domainEvents);
     memberAnalyticsService.eventHandler.setupSubscribers();
+
+    const membersAnalyticsIngress = new MembersAnalyticsIngress({domainEvents});
 
     const productRepository = new ProductRepository({
         Product,
@@ -93,7 +96,8 @@ module.exports = function MembersAPI({
         OfferRedemption,
         StripeCustomer,
         StripeCustomerSubscription,
-        offerRepository: offersAPI.repository
+        offerRepository: offersAPI.repository,
+        domainEvents
     });
 
     const eventRepository = new EventRepository({
@@ -146,7 +150,8 @@ module.exports = function MembersAPI({
     const paymentsService = new PaymentsService({
         Offer,
         offersAPI,
-        stripeAPIService
+        stripeAPIService,
+        domainEvents
     });
 
     const routerController = new RouterController({
@@ -261,7 +266,7 @@ module.exports = function MembersAPI({
         ),
         createEvents: Router().use(
             body.json(),
-            (req, res) => MembersAnalyticsIngress.createEvents(req, res)
+            (req, res) => membersAnalyticsIngress.createEvents(req, res)
         ),
         updateEmailAddress: Router().use(
             body.json(),

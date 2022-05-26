@@ -17,7 +17,11 @@ class DomainEvents {
      * @private
      * @type EventEmitter
      */
-    static ee = new EventEmitter;
+    ee = null;
+
+    constructor() {
+        this.ee = new EventEmitter;
+    }
 
     /**
      * @template Data
@@ -27,8 +31,8 @@ class DomainEvents {
      *
      * @returns {void}
      */
-    static subscribe(Event, handler) {
-        DomainEvents.ee.on(Event.name, handler);
+    subscribe(Event, handler) {
+        this.ee.on(Event.name, handler);
     }
 
     /**
@@ -36,8 +40,8 @@ class DomainEvents {
      * @param {IEvent<Data>} event
      * @returns {void}
      */
-    static dispatch(event) {
-        DomainEvents.ee.emit(event.constructor.name, event);
+    dispatch(event) {
+        this.ee.emit(event.constructor.name, event);
     }
 }
 

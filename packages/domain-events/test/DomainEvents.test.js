@@ -41,9 +41,11 @@ describe('DomainEvents', function () {
             }
         }
 
-        DomainEvents.subscribe(TestEvent, handler1);
-        DomainEvents.subscribe(TestEvent, handler2);
+        const events = new DomainEvents();
 
-        DomainEvents.dispatch(event);
+        events.subscribe(TestEvent, handler1);
+        events.subscribe(TestEvent, handler2);
+
+        events.dispatch(event);
     });
 });

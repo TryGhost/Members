@@ -15,12 +15,13 @@ describe('LastSeenAtUpdater', function () {
         const previousLastSeen = moment('2022-02-27T23:00:00Z').toISOString();
         const stub = sinon.stub().resolves();
         const settingsCache = sinon.stub().returns('Etc/UTC');
+        const domainEvents = new DomainEvents();
         const updater = new LastSeenAtUpdater({
             services: {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {
@@ -31,7 +32,7 @@ describe('LastSeenAtUpdater', function () {
             }
         });
         sinon.stub(updater, 'updateLastSeenAt');
-        DomainEvents.dispatch(MemberPageViewEvent.create({memberId: '1', memberLastSeenAt: previousLastSeen, url: '/'}, now.toDate()));
+        domainEvents.dispatch(MemberPageViewEvent.create({memberId: '1', memberLastSeenAt: previousLastSeen, url: '/'}, now.toDate()));
         assert(updater.updateLastSeenAt.calledOnceWithExactly('1', previousLastSeen, now.toDate()));
     });
 
@@ -40,12 +41,13 @@ describe('LastSeenAtUpdater', function () {
         const previousLastSeen = moment('2022-02-27T20:00:00Z').toISOString();
         const stub = sinon.stub().resolves();
         const settingsCache = sinon.stub().returns('Asia/Bangkok');
+        const domainEvents = new DomainEvents();
         const updater = new LastSeenAtUpdater({
             services: {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {
@@ -64,12 +66,13 @@ describe('LastSeenAtUpdater', function () {
         const previousLastSeen = moment('2022-02-27T20:00:00Z').toISOString();
         const stub = sinon.stub().resolves();
         const settingsCache = sinon.stub().returns('Europe/Paris');
+        const domainEvents = new DomainEvents();
         const updater = new LastSeenAtUpdater({
             services: {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {
@@ -92,12 +95,13 @@ describe('LastSeenAtUpdater', function () {
         const previousLastSeen = moment('2022-02-28T00:00:00Z').toISOString();
         const stub = sinon.stub().resolves();
         const settingsCache = sinon.stub().returns('Etc/UTC');
+        const domainEvents = new DomainEvents();
         const updater = new LastSeenAtUpdater({
             services: {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {
@@ -115,12 +119,13 @@ describe('LastSeenAtUpdater', function () {
         const now = moment('2022-02-28T18:00:00Z');
         const stub = sinon.stub().resolves();
         const settingsCache = sinon.stub().returns('Etc/UTC');
+        const domainEvents = new DomainEvents();
         const updater = new LastSeenAtUpdater({
             services: {
                 settingsCache: {
                     get: settingsCache
                 },
-                domainEvents: DomainEvents
+                domainEvents
             },
             async getMembersApi() {
                 return {

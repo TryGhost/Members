@@ -1,6 +1,5 @@
 const {flowRight} = require('lodash');
 const {mapKeyValues, mapQuery} = require('@nexes/mongo-utils');
-const DomainEvents = require('@tryghost/domain-events');
 const OfferCodeChangeEvent = require('../domain/events/OfferCodeChange');
 const OfferCreatedEvent = require('../domain/events/OfferCreated');
 const Offer = require('../domain/models/Offer');
@@ -47,12 +46,15 @@ class OfferRepository {
     /**
      * @param {{forge: (data: object) => import('bookshelf').Model<Offer.OfferProps>}} OfferModel
      * @param {{forge: (data: object) => import('bookshelf').Model<any>}} OfferRedemptionModel
+     * @param {import('@tryghost/domain-events')} domainEvents
      */
-    constructor(OfferModel, OfferRedemptionModel) {
+    constructor(OfferModel, OfferRedemptionModel, domainEvents) {
         /** @private */
         this.OfferModel = OfferModel;
         /** @private */
         this.OfferRedemptionModel = OfferRedemptionModel;
+        /** @private */
+        this.domainEvents = domainEvents;
     }
 
     /**
@@ -208,7 +210,7 @@ class OfferRepository {
                 previousCode: offer.oldCode,
                 currentCode: offer.code
             });
-            DomainEvents.dispatch(event);
+            this.domainEvents.dispatch(event);
         }
 
         if (offer.isNew) {
@@ -219,10 +221,10 @@ class OfferRepository {
                 // Only dispatch the event after the transaction has finished
                 // Because else the offer won't be committed to the database yet
                 options.transacting.executionPromise.then(() => {
-                    DomainEvents.dispatch(event);
+                    this.domainEvents.dispatch(event);
                 });
             } else {
-                DomainEvents.dispatch(event);
+                this.domainEvents.dispatch(event);
             }
         } else {
             await this.OfferModel.edit(data, {...options, id: data.id});

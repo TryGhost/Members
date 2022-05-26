@@ -5,6 +5,7 @@ const WebhookController = require('./WebhookController');
 
 module.exports = class StripeService {
     constructor({
+        domainEvents,
         membersService,
         StripeWebhook,
         models
@@ -19,6 +20,7 @@ module.exports = class StripeService {
             api
         });
         const webhookController = new WebhookController({
+            domainEvents,
             webhookManager,
             api,
             get memberRepository(){
