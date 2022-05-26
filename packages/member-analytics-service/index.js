@@ -10,10 +10,10 @@ class MemberAnalyticsService {
         this.eventHandler = new EventHandler(analyticEventRepository, domainEvents);
     }
 
-    static create(AnalyticEventModel) {
+    static create(AnalyticEventModel, domainEvents) {
         const analyticEventRepository = new AnalyticEventRepository(AnalyticEventModel);
 
-        return new MemberAnalyticsService(analyticEventRepository);
+        return new MemberAnalyticsService(analyticEventRepository, domainEvents);
     }
 }
 
