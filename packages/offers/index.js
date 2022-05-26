@@ -24,7 +24,7 @@ class OffersModule {
      * @returns {Promise<void>}
      */
     async init() {
-        DomainEvents.subscribe(OfferCodeChangeEvent, (event) => {
+        this.domainEvents.subscribe(OfferCodeChangeEvent, (event) => {
             if (event.data.previousCode) {
                 this.redirectManager.removeRedirect(`/${event.data.previousCode.value}`);
             }
@@ -35,7 +35,7 @@ class OffersModule {
             );
         });
 
-        DomainEvents.subscribe(OfferCreatedEvent, (event) => {
+        this.domainEvents.subscribe(OfferCreatedEvent, (event) => {
             this.redirectManager.addRedirect(
                 `/${event.data.offer.code.value}`,
                 `/#/portal/offers/${event.data.offer.id}`,
