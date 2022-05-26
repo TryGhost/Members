@@ -6,7 +6,7 @@ class MemberAnalyticsService {
      * @param {AnalyticEventRepository} analyticEventRepository
      * @param {import('@tryghost/domain-events')} domainEvents
      */
-    constructor(analyticEventRepository) {
+    constructor(analyticEventRepository, domainEvents) {
         this.eventHandler = new EventHandler(analyticEventRepository, domainEvents);
     }
 
