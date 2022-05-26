@@ -67,8 +67,10 @@ module.exports = function MembersAPI({
         issuer
     });
 
-    const memberAnalyticsService = MemberAnalyticsService.create(MemberAnalyticEvent);
+    const memberAnalyticsService = MemberAnalyticsService.create(MemberAnalyticEvent, domainEvents);
     memberAnalyticsService.eventHandler.setupSubscribers();
+
+    const membersAnalyticsIngress = new MembersAnalyticsIngress({domainEvents});
 
     const productRepository = new ProductRepository({
         Product,
@@ -264,7 +266,7 @@ module.exports = function MembersAPI({
         ),
         createEvents: Router().use(
             body.json(),
-            (req, res) => MembersAnalyticsIngress.createEvents(req, res)
+            (req, res) => membersAnalyticsIngress.createEvents(req, res)
         ),
         updateEmailAddress: Router().use(
             body.json(),
