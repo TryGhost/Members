@@ -1,4 +1,3 @@
-const DomainEvents = require('@tryghost/domain-events');
 const {MemberEntryViewEvent} = require('@tryghost/member-events');
 
 /**
