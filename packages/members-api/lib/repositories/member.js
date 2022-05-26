@@ -2,7 +2,6 @@ const _ = require('lodash');
 const errors = require('@tryghost/errors');
 const logging = require('@tryghost/logging');
 const tpl = require('@tryghost/tpl');
-const DomainEvents = require('@tryghost/domain-events');
 const {SubscriptionCreatedEvent, MemberSubscribeEvent} = require('@tryghost/member-events');
 const ObjectId = require('bson-objectid');
 const {NotFoundError} = require('@tryghost/errors');
@@ -27,6 +26,7 @@ module.exports = class MemberRepository {
     /**
      * @param {object} deps
      * @param {any} deps.Member
+     * @todo Can remove these after separating event persistence from creation
      * @param {any} deps.MemberCancelEvent
      * @param {any} deps.MemberSubscribeEvent
      * @param {any} deps.MemberEmailChangeEvent
@@ -42,6 +42,7 @@ module.exports = class MemberRepository {
      * @param {any} deps.offerRepository
      * @param {ITokenService} deps.tokenService
      * @param {any} deps.newslettersService
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
      */
     constructor({
         Member,
@@ -59,7 +60,8 @@ module.exports = class MemberRepository {
         productRepository,
         offerRepository,
         tokenService,
-        newslettersService
+        newslettersService,
+        domainEvents
     }) {
         this._Member = Member;
         this._MemberCancelEvent = MemberCancelEvent;
@@ -77,7 +79,10 @@ module.exports = class MemberRepository {
         this._newslettersService = newslettersService;
         this._labsService = labsService;
 
-        DomainEvents.subscribe(SubscriptionCreatedEvent, async function (event) {
+        /** @private */
+        this.domainEvents = domainEvents;
+
+        this.domainEvents.subscribe(SubscriptionCreatedEvent, async function (event) {
             if (!event.data.offerId) {
                 return;
             }
@@ -276,7 +281,7 @@ module.exports = class MemberRepository {
         }
 
         if (newsletters && newsletters.length > 0) {
-            DomainEvents.dispatch(MemberSubscribeEvent.create({
+            this.domainEvents.dispatch(MemberSubscribeEvent.create({
                 memberId: member.id,
                 source: source
             }, eventData.created_at));
@@ -475,7 +480,7 @@ module.exports = class MemberRepository {
         }
 
         if (newslettersToAdd.length > 0 || newslettersToRemove.length > 0) {
-            DomainEvents.dispatch(MemberSubscribeEvent.create({
+            this.domainEvents.dispatch(MemberSubscribeEvent.create({
                 memberId: member.id,
                 source: source
             }, member.updated_at));
@@ -1354,4 +1359,3 @@ module.exports = class MemberRepository {
         return true;
     }
 };
-
