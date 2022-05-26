@@ -1,4 +1,3 @@
-const DomainEvents = require('@tryghost/domain-events');
 const OfferCreatedEvent = require('@tryghost/members-offers').events.OfferCreatedEvent;
 
 class PaymentsService {
@@ -7,6 +6,7 @@ class PaymentsService {
      * @param {any} deps.Offer
      * @param {import('@tryghost/members-offers/lib/application/OffersAPI')} deps.offersAPI
      * @param {any} deps.stripeAPIService
+     * @param {import('@tryghost/domain-events')} deps.domainEvents
      */
     constructor(deps) {
         /** @private */
@@ -15,8 +15,10 @@ class PaymentsService {
         this.offersAPI = deps.offersAPI;
         /** @private */
         this.stripeAPIService = deps.stripeAPIService;
+        /** @private */
+        this.domainEvents = deps.domainEvents;
 
-        DomainEvents.subscribe(OfferCreatedEvent, async (event) => {
+        this.domainEvents.subscribe(OfferCreatedEvent, async (event) => {
             await this.getCouponForOffer(event.data.offer.id);
         });
     }
