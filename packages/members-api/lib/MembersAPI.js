@@ -148,7 +148,8 @@ module.exports = function MembersAPI({
     const paymentsService = new PaymentsService({
         Offer,
         offersAPI,
-        stripeAPIService
+        stripeAPIService,
+        domainEvents
     });
 
     const routerController = new RouterController({
