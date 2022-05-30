@@ -1,5 +1,16 @@
+const tpl = require('@tryghost/tpl');
 const logging = require('@tryghost/logging');
 const _ = require('lodash');
+const { BadRequestError, NoPermissionError, NotFoundError } = require('@tryghost/errors');
+
+const messages = {
+    badRequest: 'Bad Request.',
+    notFound: 'Not Found.',
+    offerArchived: 'This offer is archived.',
+    tierArchived: 'This tier is archived.',
+    existingSubscription: 'A subscription exists for this Member.',
+    unableToCheckout: 'Unable to initiate checkout session'
+};
 
 module.exports = class RouterController {
     /**
@@ -127,55 +138,56 @@ module.exports = class RouterController {
         const metadata = req.body.metadata;
 
         if (!ghostPriceId && !offerId && !tierId && !cadence) {
-            res.writeHead(400);
-            return res.end('Bad Request.');
+            throw new BadRequestError({
+                message: tpl(messages.badRequest)
+            });
         }
 
         if (offerId && (ghostPriceId || (tierId && cadence))) {
-            res.writeHead(400);
-            return res.end('Bad Request.');
+            throw new BadRequestError({
+                message: tpl(messages.badRequest)
+            });
         }
 
         if (ghostPriceId && tierId && cadence) {
-            res.writeHead(400);
-            return res.end('Bad Request.');
+            throw new BadRequestError({
+                message: tpl(messages.badRequest)
+            });
         }
 
         if (tierId && !cadence) {
-            res.writeHead(400);
-            return res.end('Bad Request.');
+            throw new BadRequestError({
+                message: tpl(messages.badRequest)
+            });
         }
 
         if (cadence && cadence !== 'month' && cadence !== 'year') {
-            res.writeHead(400);
-            return res.end('Bad Request.');
+            throw new BadRequestError({
+                message: tpl(messages.badRequest)
+            });
         }
 
         let couponId = null;
         if (offerId) {
-            try {
-                const offer = await this._offersAPI.getOffer({id: offerId});
-                const tier = (await this._productRepository.get(offer.tier)).toJSON();
+            const offer = await this._offersAPI.getOffer({id: offerId});
+            const tier = (await this._productRepository.get(offer.tier)).toJSON();
 
-                if (offer.status === 'archived') {
-                    res.writeHead(403);
-                    return res.end('Offer is archived.');
-                }
-
-                if (offer.cadence === 'month') {
-                    ghostPriceId = tier.monthly_price_id;
-                } else {
-                    ghostPriceId = tier.yearly_price_id;
-                }
-
-                const coupon = await this._paymentsService.getCouponForOffer(offerId);
-                couponId = coupon.id;
-
-                metadata.offer = offer.id;
-            } catch (err) {
-                res.writeHead(500);
-                return res.end('Could not use Offer.');
+            if (offer.status === 'archived') {
+                throw new NoPermissionError({
+                    message: tpl(messages.offerArchived)
+                });
             }
+
+            if (offer.cadence === 'month') {
+                ghostPriceId = tier.monthly_price_id;
+            } else {
+                ghostPriceId = tier.yearly_price_id;
+            }
+
+            const coupon = await this._paymentsService.getCouponForOffer(offerId);
+            couponId = coupon.id;
+
+            metadata.offer = offer.id;
         }
 
         if (!ghostPriceId) {
@@ -194,8 +206,9 @@ module.exports = class RouterController {
         });
 
         if (!price) {
-            res.writeHead(404);
-            return res.end('Not Found.');
+            throw new NotFoundError({
+                message: tpl(messages.notFound)
+            });
         }
 
         const priceId = price.get('stripe_price_id');
@@ -203,8 +216,9 @@ module.exports = class RouterController {
         const product = await this._productRepository.get({stripe_price_id: priceId});
 
         if (product.get('active') !== true) {
-            res.writeHead(403);
-            return res.end('Tier is archived.');
+            throw new NoPermissionError({
+                message: tpl(messages.tierArchived)
+            });
         }
 
         let member = null;
@@ -263,10 +277,16 @@ module.exports = class RouterController {
 
         if (member.related('products').length !== 0) {
             if (!identity && req.body.customerEmail) {
-                await this._sendEmailWithMagicLink({email: req.body.customerEmail, requestedType: 'signin'});
+                try {
+                    await this._sendEmailWithMagicLink({email: req.body.customerEmail, requestedType: 'signin'});
+                } catch (err) {
+                    logging.warn(err);
+                }
             }
-            res.writehead(403);
-            return res.end('no permission');
+            throw new NoPermissionError({
+                message: messages.existingSubscription,
+                code: 'ESUBEXIST'
+            });
         }
 
         let stripeCustomer;
@@ -306,15 +326,16 @@ module.exports = class RouterController {
             });
 
             return res.end(JSON.stringify(sessionInfo));
-        } catch (e) {
-            const error = e.message || 'Unable to initiate checkout session';
-            res.writeHead(400);
-            return res.end(error);
+        } catch (err) {
+            throw new BadRequestError({
+                err,
+                message: tpl(messages.unableToCheckout)
+            });
         }
     }
 
     async sendMagicLink(req, res) {
-        const {email, emailType, requestSrc} = req.body;
+        const {email, emailType} = req.body;
         if (!email) {
             res.writeHead(400);
             return res.end('Bad Request.');
