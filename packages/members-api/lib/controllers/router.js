@@ -262,8 +262,11 @@ module.exports = class RouterController {
         }
 
         if (member.related('products').length !== 0) {
-            res.writeHead(403);
-            return res.end('No permission');
+            if (!identity && req.body.customerEmail) {
+                await this._sendEmailWithMagicLink({email: req.body.customerEmail, requestedType: 'signin'});
+            }
+            res.writehead(403);
+            return res.end('no permission');
         }
 
         let stripeCustomer;
