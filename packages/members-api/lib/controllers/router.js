@@ -207,20 +207,21 @@ module.exports = class RouterController {
             return res.end('Tier is archived.');
         }
 
-        let email;
-        try {
-            if (!identity) {
-                email = null;
-            } else {
-                const claims = await this._tokenService.decodeToken(identity);
-                email = claims && claims.sub;
+        let member = null;
+        if (identity) {
+            try {
+                    const claims = await this._tokenService.decodeToken(identity);
+                    const email = claims && claims.sub;
+                    if (email) {
+                        member = await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']});
+                    }
+            } catch (err) {
+                res.writeHead(401);
+                return res.end('Unauthorized');
             }
-        } catch (err) {
-            res.writeHead(401);
-            return res.end('Unauthorized');
+        } else if (req.body.customerEmail) {
+            member = await this._memberRepository.get({email: req.body.customerEmail}, {withRelated: ['stripeCustomers', 'products']});
         }
-
-        const member = email ? await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']}) : null;
 
         let successUrl = req.body.successUrl;
         let cancelUrl = req.body.cancelUrl;
