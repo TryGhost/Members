@@ -210,11 +210,11 @@ module.exports = class RouterController {
         let member = null;
         if (identity) {
             try {
-                    const claims = await this._tokenService.decodeToken(identity);
-                    const email = claims && claims.sub;
-                    if (email) {
-                        member = await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']});
-                    }
+                const claims = await this._tokenService.decodeToken(identity);
+                const email = claims && claims.sub;
+                if (email) {
+                    member = await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']});
+                }
             } catch (err) {
                 res.writeHead(401);
                 return res.end('Unauthorized');
