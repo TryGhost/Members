@@ -1,7 +1,7 @@
 const tpl = require('@tryghost/tpl');
 const logging = require('@tryghost/logging');
 const _ = require('lodash');
-const { BadRequestError, NoPermissionError, NotFoundError } = require('@tryghost/errors');
+const {BadRequestError, NoPermissionError, NotFoundError} = require('@tryghost/errors');
 
 const messages = {
     badRequest: 'Bad Request.',
@@ -285,7 +285,7 @@ module.exports = class RouterController {
             }
             throw new NoPermissionError({
                 message: messages.existingSubscription,
-                code: 'ESUBEXIST'
+                code: 'CANNOT_CHECKOUT_WITH_EXISTING_SUBSCRIPTION'
             });
         }
 
@@ -346,11 +346,11 @@ module.exports = class RouterController {
                 const member = await this._memberRepository.get({email});
                 if (member) {
                     const tokenData = {};
-                    await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc});
+                    await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType});
                 }
             } else {
                 const tokenData = _.pick(req.body, ['labels', 'name', 'newsletters']);
-                await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType, requestSrc});
+                await this._sendEmailWithMagicLink({email, tokenData, requestedType: emailType});
             }
             res.writeHead(201);
             return res.end('Created.');
