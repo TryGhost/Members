@@ -1,7 +1,7 @@
 const tpl = require('@tryghost/tpl');
 const logging = require('@tryghost/logging');
 const _ = require('lodash');
-const {BadRequestError, NoPermissionError, NotFoundError} = require('@tryghost/errors');
+const {BadRequestError, NoPermissionError, NotFoundError, UnauthorizedError} = require('@tryghost/errors');
 
 const messages = {
     badRequest: 'Bad Request.',
@@ -230,8 +230,7 @@ module.exports = class RouterController {
                     member = await this._memberRepository.get({email}, {withRelated: ['stripeCustomers', 'products']});
                 }
             } catch (err) {
-                res.writeHead(401);
-                return res.end('Unauthorized');
+                throw new UnauthorizedError({err});
             }
         } else if (req.body.customerEmail) {
             member = await this._memberRepository.get({email: req.body.customerEmail}, {withRelated: ['stripeCustomers', 'products']});
