@@ -78,9 +78,14 @@ module.exports = class MembersCSVImporter {
         const batchSize = 1;
 
         const siteTimezone = this._getTimezone();
-        const currentTime = moment().tz(siteTimezone).format('YYYY-MM-DD HH:mm:ss.SSS');
-        const outputFileName = `Members Import ${currentTime}.csv`;
-        const outputFilePath = path.join(this._storagePath, '/', outputFileName);
+        const currentTime = moment().tz(siteTimezone);
+        let format = 'YYYY-MM-DD HH:mm:ss.SSS';
+        let outputFileName = `Members Import ${currentTime.format(format)}.csv`;
+        if (process.platform === 'win32') {
+            format = 'YYYYMMDD_HHmmssSSS';
+            outputFileName = `MembersImport${currentTime.format(format)}.csv`;
+        }
+        const outputFilePath = path.join(this._storagePath, path.sep, outputFileName);
 
         const pathExists = await fs.pathExists(outputFilePath);
 
