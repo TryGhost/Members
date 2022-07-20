@@ -33,6 +33,6 @@
     "@tryghost/member-events": "^0.4.6",
     "leaky-bucket": "^2.2.0",
     "lodash": "^4.17.21",
-    "stripe": "^8.174.0"
+    "stripe": "^9.0.0"
   }
 }
