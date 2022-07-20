@@ -10,6 +10,7 @@ describe('EventRepository', function () {
         before(function () {
             eventRepository = new EventRepository({
                 EmailRecipient: null,
+                MemberCancelEvent: null,
                 MemberSubscribeEvent: null,
                 MemberPaymentEvent: null,
                 MemberStatusEvent: null,
